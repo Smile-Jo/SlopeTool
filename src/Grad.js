@@ -2,86 +2,234 @@ let points = []; // 터치된 점들을 저장
 let triangleCreated = false; // 삼각형 생성 여부 추적
 let gridSize = 50; // 초기 격자 크기
 
-// 카메라 시작 - 후면 카메라 우선순위로 수정
+// 카메라 시작 - 모바일 최적화
 async function startCamera() {
   try {
     let stream;
     
+    // 모바일 디바이스 확인
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    console.log('모바일 디바이스:', isMobile);
+    
     try {
-      // 1차 시도: facingMode만 사용 (ideal로 변경)
-      stream = await navigator.mediaDevices.getUserMedia({
+      // 1차 시도: 모바일에서 후면 카메라 강제 설정
+      const constraints = {
         video: {
-          facingMode: { ideal: "environment" }, // exact 대신 ideal 사용
-          width: { ideal: 1920 },
-          height: { ideal: 1080 }
+          facingMode: { exact: "environment" },
+          width: { ideal: isMobile ? 1280 : 1920 },
+          height: { ideal: isMobile ? 720 : 1080 }
         }
-      });
-      console.log('후면 카메라 연결 성공 (facingMode)');
+      };
+      
+      stream = await navigator.mediaDevices.getUserMedia(constraints);
+      console.log('후면 카메라 연결 성공 (exact environment)');
     } catch (error) {
-      console.log('1차 시도 실패, 디바이스 목록으로 시도 중...', error);
+      console.log('1차 시도 실패, 2차 시도 중...', error);
       
       try {
-        // 2차 시도: 기기 목록을 통한 후면 카메라 선택
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const videoDevices = devices.filter(device => device.kind === 'videoinput');
-        console.log('사용 가능한 카메라 목록:', videoDevices);
-
-        // 후면 카메라 찾기 (더 다양한 키워드로 검색)
-        const backCamera = videoDevices.find(device => {
-          const label = device.label.toLowerCase();
-          return label.includes('back') || 
-                 label.includes('rear') || 
-                 label.includes('environment') ||
-                 label.includes('0') || // 보통 첫 번째가 후면
-                 !label.includes('front') && !label.includes('user'); // 전면이 아닌 것
-        }) || videoDevices[0]; // 찾지 못하면 첫 번째 카메라
-
-        if (backCamera && backCamera.deviceId) {
-          stream = await navigator.mediaDevices.getUserMedia({
-            video: {
-              deviceId: { exact: backCamera.deviceId },
-              width: { ideal: 1920 },
-              height: { ideal: 1080 }
-            }
-          });
-          console.log('후면 카메라 연결 성공 (deviceId):', backCamera.label);
-        } else {
-          throw new Error('후면 카메라를 찾을 수 없습니다');
-        }
-      } catch (error2) {
-        console.log('2차 시도 실패, 기본 카메라 사용...', error2);
-        
-        // 3차 시도: 최소한의 설정으로 카메라 접근
+        // 2차 시도: ideal 모드로 시도
         stream = await navigator.mediaDevices.getUserMedia({
           video: {
-            width: { ideal: 1920 },
-            height: { ideal: 1080 }
+            facingMode: { ideal: "environment" },
+            width: { ideal: isMobile ? 1280 : 1920 },
+            height: { ideal: isMobile ? 720 : 1080 }
           }
         });
-        console.log('기본 카메라 연결 성공');
+        console.log('후면 카메라 연결 성공 (ideal environment)');
+      } catch (error2) {
+        console.log('2차 시도 실패, 디바이스 목록으로 시도 중...', error2);
+        
+        try {
+          // 3차 시도: 기기 목록을 통한 후면 카메라 선택
+          const devices = await navigator.mediaDevices.enumerateDevices();
+          const videoDevices = devices.filter(device => device.kind === 'videoinput');
+          console.log('사용 가능한 카메라 목록:', videoDevices);
+
+          // 후면 카메라 찾기 (더 다양한 키워드로 검색)
+          const backCamera = videoDevices.find(device => {
+            const label = device.label.toLowerCase();
+            return label.includes('back') || 
+                   label.includes('rear') || 
+                   label.includes('environment') ||
+                   label.includes('camera2') ||
+                   label.includes('0') ||
+                   (!label.includes('front') && !label.includes('user') && !label.includes('facing'));
+          }) || videoDevices[videoDevices.length - 1]; // 마지막 카메라 시도
+
+          if (backCamera && backCamera.deviceId) {
+            stream = await navigator.mediaDevices.getUserMedia({
+              video: {
+                deviceId: { exact: backCamera.deviceId },
+                width: { ideal: isMobile ? 1280 : 1920 },
+                height: { ideal: isMobile ? 720 : 1080 }
+              }
+            });
+            console.log('후면 카메라 연결 성공 (deviceId):', backCamera.label);
+          } else {
+            throw new Error('후면 카메라를 찾을 수 없습니다');
+          }
+        } catch (error3) {
+          console.log('3차 시도 실패, 기본 카메라 사용...', error3);
+          
+          // 4차 시도: 최소한의 설정으로 카메라 접근
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: true
+          });
+          console.log('기본 카메라 연결 성공');
+        }
       }
     }
 
     const videoElement = document.getElementById('video');
-    videoElement.srcObject = stream;
+    if (videoElement) {
+      videoElement.srcObject = stream;
+      
+      // 모바일에서 비디오 재생 보장
+      videoElement.addEventListener('loadedmetadata', () => {
+        console.log('비디오 메타데이터 로드 완료');
+        videoElement.play().then(() => {
+          console.log('비디오 재생 성공');
+        }).catch(e => {
+          console.error('비디오 재생 실패:', e);
+          // 사용자 상호작용 후 재시도
+          document.body.addEventListener('touchstart', () => {
+            videoElement.play();
+          }, { once: true });
+        });
+      });
+    }
     
     // 카메라 정보 로그
     const track = stream.getVideoTracks()[0];
-    const settings = track.getSettings();
-    console.log('현재 카메라 설정:', settings);
-    console.log('카메라 라벨:', track.label);
+    if (track) {
+      const settings = track.getSettings();
+      console.log('현재 카메라 설정:', settings);
+      console.log('카메라 라벨:', track.label);
+      console.log('카메라 facing mode:', settings.facingMode);
+    }
     
   } catch (error) {
     console.error('Error accessing camera:', error);
-    alert('카메라에 접근할 수 없습니다. 브라우저 설정을 확인해주세요.');
+    alert('카메라에 접근할 수 없습니다. 브라우저 설정을 확인하고 카메라 권한을 허용해주세요.');
   }
 }
 
-// 페이지 로드 시 카메라 시작
+// 페이지 로드 시 카메라 시작 및 이벤트 리스너 등록
 window.addEventListener('load', () => {
+  console.log('페이지 로드 완료');
   startCamera();
   updateGridOverlay();  // 초기 그리드 적용
+  setupEventListeners(); // 이벤트 리스너 설정
 });
+
+// 이벤트 리스너 설정 함수
+function setupEventListeners() {
+  console.log('이벤트 리스너 설정 중...');
+  
+  // 각 버튼이 존재하는지 확인 후 이벤트 리스너 추가
+  const resetButton = document.getElementById('resetButton');
+  const triangleButton = document.getElementById('triangleButton');
+  const lengthButton = document.getElementById('lengthButton');
+  const captureButton = document.getElementById('captureButton');
+  const increaseGridButton = document.getElementById('increaseGridButton');
+  const decreaseGridButton = document.getElementById('decreaseGridButton');
+
+  if (resetButton) {
+    resetButton.addEventListener('click', (e) => {
+      console.log('초기화 버튼 클릭');
+      e.stopPropagation();
+      e.preventDefault();
+      resetHighlights();
+    });
+    resetButton.addEventListener('touchend', (e) => {
+      console.log('초기화 버튼 터치');
+      e.stopPropagation();
+      e.preventDefault();
+      resetHighlights();
+    });
+  }
+
+  if (triangleButton) {
+    triangleButton.addEventListener('click', (e) => {
+      console.log('삼각형 버튼 클릭');
+      e.stopPropagation();
+      e.preventDefault();
+      if (points.length >= 2) {
+        drawTriangle(points[0], points[1]);
+      }
+    });
+    triangleButton.addEventListener('touchend', (e) => {
+      console.log('삼각형 버튼 터치');
+      e.stopPropagation();
+      e.preventDefault();
+      if (points.length >= 2) {
+        drawTriangle(points[0], points[1]);
+      }
+    });
+  }
+
+  if (lengthButton) {
+    lengthButton.addEventListener('click', (e) => {
+      console.log('거리 측정 버튼 클릭');
+      e.stopPropagation();
+      e.preventDefault();
+      if (points.length >= 2) {
+        displayDimensions(points[0], points[1]);
+      }
+    });
+    lengthButton.addEventListener('touchend', (e) => {
+      console.log('거리 측정 버튼 터치');
+      e.stopPropagation();
+      e.preventDefault();
+      if (points.length >= 2) {
+        displayDimensions(points[0], points[1]);
+      }
+    });
+  }
+
+  if (captureButton) {
+    captureButton.addEventListener('click', (e) => {
+      console.log('캡쳐 버튼 클릭');
+      captureScreenshot(e);
+    });
+    captureButton.addEventListener('touchend', (e) => {
+      console.log('캡쳐 버튼 터치');
+      captureScreenshot(e);
+    });
+  }
+
+  if (increaseGridButton) {
+    increaseGridButton.addEventListener('click', (e) => {
+      console.log('격자 증가 버튼 클릭');
+      e.stopPropagation();
+      e.preventDefault();
+      increaseGridSize();
+    });
+    increaseGridButton.addEventListener('touchend', (e) => {
+      console.log('격자 증가 버튼 터치');
+      e.stopPropagation();
+      e.preventDefault();
+      increaseGridSize();
+    });
+  }
+
+  if (decreaseGridButton) {
+    decreaseGridButton.addEventListener('click', (e) => {
+      console.log('격자 감소 버튼 클릭');
+      e.stopPropagation();
+      e.preventDefault();
+      decreaseGridSize();
+    });
+    decreaseGridButton.addEventListener('touchend', (e) => {
+      console.log('격자 감소 버튼 터치');
+      e.stopPropagation();
+      e.preventDefault();
+      decreaseGridSize();
+    });
+  }
+
+  console.log('이벤트 리스너 설정 완료');
+}
 
 // grid-overlay의 background-size 업데이트 함수
 function updateGridOverlay() {
@@ -143,22 +291,30 @@ function isInControlArea(x, y) {
   return false;
 }
 
-// 터치 이벤트 리스너 - 터치 유지되도록 수정
+// 터치 이벤트 리스너 - 모바일 최적화
 document.addEventListener('touchstart', handleTouch, { passive: false });
+document.addEventListener('touchend', handleTouchEnd, { passive: false });
 // 마우스 클릭 이벤트 리스너 추가 (데스크톱 지원)
 document.addEventListener('click', handleClick);
 
-function handleTouch(event) {
-  // 기본 터치 동작 방지 (스크롤, 줌 등)
-  event.preventDefault();
+let touchStartTime = 0;
+let touchStartPoint = null;
+
+function handleTouchEnd(event) {
+  const touchEndTime = Date.now();
+  const touchDuration = touchEndTime - touchStartTime;
   
+  // 짧은 터치만 처리 (길게 누르면 무시)
+  if (touchDuration < 300 && touchStartPoint) {
+    handleTouchAction(touchStartPoint);
+  }
+}
+
+function handleTouchAction(touchPoint) {
   // 두 점이 이미 추가된 경우 더 이상 추가하지 않음
   if (points.length >= 2) return;
 
-  // 터치된 위치 좌표 가져오기
-  const touch = event.touches[0];
-  const touchX = touch.clientX;
-  const touchY = touch.clientY;
+  const { touchX, touchY } = touchPoint;
 
   // 컨트롤 영역에서 터치된 경우 무시
   if (isInControlArea(touchX, touchY)) {
@@ -166,7 +322,7 @@ function handleTouch(event) {
   }
 
   // 격자 점 크기 및 간격
-  const tolerance = 30; // 터치 좌표와 격자 점 사이의 허용 오차 (모바일용 증가)
+  const tolerance = 40; // 모바일용 허용 오차 증가
 
   // 터치 좌표를 근접한 격자 점으로 스냅
   const snappedX = Math.round(touchX / gridSize) * gridSize;
@@ -177,47 +333,27 @@ function handleTouch(event) {
     const existingHighlight = document.querySelector(`.highlight[data-x="${snappedX}"][data-y="${snappedY}"]`);
 
     if (existingHighlight) {
-      // 이미 강조 표시가 있으면 제거하고 points 배열에서도 제거
-      existingHighlight.remove();
-      points = points.filter(point => point.x !== snappedX || point.y !== snappedY);
-      
-      // 선분도 제거
-      const existingLine = document.querySelector('div[style*="rgba(0, 0, 255, 0.7)"]');
-      if (existingLine) {
-        existingLine.remove();
-      }
-      
-      // 버튼 초기 상태로 복원
-      resetButtonsToInitial();
+      // 점 제거
+      removePoint(snappedX, snappedY);
     } else {
-      // 강조 표시 요소 생성 (모바일 터치용 크기 증가)
-      const highlight = document.createElement('div');
-      highlight.classList.add('highlight');
-      highlight.style.position = 'absolute';
-      highlight.style.width = '25px'; // 터치용 크기 증가
-      highlight.style.height = '25px';
-      highlight.style.backgroundColor = 'rgba(255, 0, 0, 0.8)'; // 약간 더 불투명하게
-      highlight.style.borderRadius = '50%';
-      highlight.style.border = '2px solid white'; // 경계선 추가로 가시성 향상
-      highlight.style.top = `${snappedY - 12.5}px`;
-      highlight.style.left = `${snappedX - 12.5}px`;
-      highlight.style.pointerEvents = 'none'; 
-      highlight.style.zIndex = '15';
-      highlight.setAttribute('data-x', snappedX);
-      highlight.setAttribute('data-y', snappedY);
-
-      // 강조 표시 요소를 바디에 추가
-      document.body.appendChild(highlight);
-
-      // points 배열에 추가
-      points.push({ x: snappedX, y: snappedY });
-
-      // 두 점이 모두 추가되면 선분을 그리기
-      if (points.length === 2) {
-        drawLine(points[0], points[1]);
-      }
+      // 점 추가
+      addPoint(snappedX, snappedY);
     }
   }
+}
+
+function handleTouch(event) {
+  // 기본 터치 동작 방지 (스크롤, 줌 등)
+  event.preventDefault();
+  
+  touchStartTime = Date.now();
+  
+  // 터치된 위치 좌표 저장
+  const touch = event.touches[0];
+  touchStartPoint = {
+    touchX: touch.clientX,
+    touchY: touch.clientY
+  };
 }
 
 function handleClick(event) {
@@ -245,46 +381,59 @@ function handleClick(event) {
     const existingHighlight = document.querySelector(`.highlight[data-x="${snappedX}"][data-y="${snappedY}"]`);
 
     if (existingHighlight) {
-      // 이미 강조 표시가 있으면 제거하고 points 배열에서도 제거
-      existingHighlight.remove();
-      points = points.filter(point => point.x !== snappedX || point.y !== snappedY);
-      
-      // 선분도 제거
-      const existingLine = document.querySelector('div[style*="rgba(0, 0, 255, 0.7)"]');
-      if (existingLine) {
-        existingLine.remove();
-      }
-      
-      // 버튼 초기 상태로 복원
-      resetButtonsToInitial();
+      removePoint(snappedX, snappedY);
     } else {
-      // 강조 표시 요소 생성
-      const highlight = document.createElement('div');
-      highlight.classList.add('highlight');
-      highlight.style.position = 'absolute';
-      highlight.style.width = '20px';
-      highlight.style.height = '20px';
-      highlight.style.backgroundColor = 'rgba(255, 0, 0, 0.7)';
-      highlight.style.borderRadius = '50%';
-      highlight.style.top = `${snappedY - 9.5}px`;
-      highlight.style.left = `${snappedX - 9.5}px`;
-      highlight.style.pointerEvents = 'none';
-      highlight.style.zIndex = '15';
-      highlight.setAttribute('data-x', snappedX);
-      highlight.setAttribute('data-y', snappedY);
-
-      // 강조 표시 요소를 바디에 추가
-      document.body.appendChild(highlight);
-
-      // points 배열에 추가
-      points.push({ x: snappedX, y: snappedY });
-
-      // 두 점이 모두 추가되면 선분을 그리기
-      if (points.length === 2) {
-        drawLine(points[0], points[1]);
-      }
+      addPoint(snappedX, snappedY);
     }
   }
+}
+
+// 점 추가 함수
+function addPoint(x, y) {
+  console.log('점 추가:', x, y);
+  
+  const highlight = document.createElement('div');
+  highlight.classList.add('highlight');
+  highlight.style.position = 'absolute';
+  highlight.style.width = '30px'; // 모바일용 크기 증가
+  highlight.style.height = '30px';
+  highlight.style.backgroundColor = 'rgba(255, 0, 0, 0.8)';
+  highlight.style.borderRadius = '50%';
+  highlight.style.border = '3px solid white'; // 경계선 강화
+  highlight.style.top = `${y - 15}px`;
+  highlight.style.left = `${x - 15}px`;
+  highlight.style.pointerEvents = 'none';
+  highlight.style.zIndex = '15';
+  highlight.setAttribute('data-x', x);
+  highlight.setAttribute('data-y', y);
+
+  document.body.appendChild(highlight);
+  points.push({ x, y });
+
+  if (points.length === 2) {
+    drawLine(points[0], points[1]);
+  }
+}
+
+// 점 제거 함수
+function removePoint(x, y) {
+  console.log('점 제거:', x, y);
+  
+  const existingHighlight = document.querySelector(`.highlight[data-x="${x}"][data-y="${y}"]`);
+  if (existingHighlight) {
+    existingHighlight.remove();
+  }
+  
+  points = points.filter(point => point.x !== x || point.y !== y);
+  
+  // 선분도 제거
+  const existingLine = document.querySelector('div[style*="rgba(0, 0, 255, 0.7)"]');
+  if (existingLine) {
+    existingLine.remove();
+  }
+  
+  // 버튼 초기 상태로 복원
+  resetButtonsToInitial();
 }
 
 function drawLine(point1, point2) {
@@ -487,40 +636,8 @@ function fallbackCapture() {
   }
 }
 
-// 초기화, 직각삼각형, 길이 버튼 클릭 이벤트 리스너 추가
-document.getElementById('resetButton').addEventListener('click', (e) => {
-  e.stopPropagation();
-  e.preventDefault();
-  resetHighlights();
-});
-
-document.getElementById('triangleButton').addEventListener('click', (e) => {
-  e.stopPropagation();
-  e.preventDefault();
-  drawTriangle(points[0], points[1]);
-});
-
-document.getElementById('lengthButton').addEventListener('click', (e) => {
-  e.stopPropagation();
-  e.preventDefault();
-  displayDimensions(points[0], points[1]);
-});
-
-document.getElementById('captureButton').addEventListener('click', captureScreenshot);
-
-document.getElementById('increaseGridButton').addEventListener('click', (e) => {
-  e.stopPropagation();
-  e.preventDefault();
-  increaseGridSize();
-});
-
-document.getElementById('decreaseGridButton').addEventListener('click', (e) => {
-  e.stopPropagation();
-  e.preventDefault();
-  decreaseGridSize();
-});
-
 function resetHighlights() {
+  console.log('초기화 함수 실행');
   // 기존 요소들 제거
   document.querySelectorAll('.highlight, .triangle, div[style*="rgba(0, 255, 0, 0.5)"], div[style*="rgba(0, 0, 255, 0.7)"], .base-line, .height-line').forEach(el => el.remove());
   
