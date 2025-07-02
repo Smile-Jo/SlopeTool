@@ -11,6 +11,11 @@ async function startCamera() {
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     console.log('모바일 디바이스:', isMobile);
     
+    // 사용자 미디어 지원 확인
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      throw new Error('이 브라우저는 카메라 기능을 지원하지 않습니다.');
+    }
+    
     try {
       // 1차 시도: 모바일에서 후면 카메라 강제 설정
       const constraints = {
@@ -84,18 +89,53 @@ async function startCamera() {
     if (videoElement) {
       videoElement.srcObject = stream;
       
-      // 모바일에서 비디오 재생 보장
-      videoElement.addEventListener('loadedmetadata', () => {
-        console.log('비디오 메타데이터 로드 완료');
-        videoElement.play().then(() => {
-          console.log('비디오 재생 성공');
-        }).catch(e => {
-          console.error('비디오 재생 실패:', e);
-          // 사용자 상호작용 후 재시도
-          document.body.addEventListener('touchstart', () => {
-            videoElement.play();
-          }, { once: true });
-        });
+      // 모바일 자동재생을 위한 속성 설정
+      videoElement.setAttribute('playsinline', 'true');
+      videoElement.setAttribute('autoplay', 'true');
+      videoElement.setAttribute('muted', 'true');
+      videoElement.muted = true; // 음소거로 자동재생 허용
+      
+      // 비디오 로드 완료를 기다린 후 재생 시도
+      return new Promise((resolve, reject) => {
+        const playVideo = async () => {
+          try {
+            await videoElement.play();
+            console.log('비디오 재생 성공');
+            resolve();
+          } catch (e) {
+            console.warn('비디오 자동 재생 실패 (사용자 상호작용 필요):', e);
+            // 사용자 상호작용 후 재시도
+            const userInteractionHandler = async () => {
+              try {
+                await videoElement.play();
+                console.log('사용자 상호작용 후 비디오 재생 성공');
+                resolve();
+              } catch (retryError) {
+                console.error('사용자 상호작용 후에도 재생 실패:', retryError);
+                reject(retryError);
+              }
+            };
+
+            document.body.addEventListener('touchstart', userInteractionHandler, { once: true });
+            document.body.addEventListener('click', userInteractionHandler, { once: true });
+          }
+        };
+
+        videoElement.addEventListener('loadedmetadata', () => {
+          console.log('비디오 메타데이터 로드 완료');
+          console.log('비디오 크기:', videoElement.videoWidth, 'x', videoElement.videoHeight);
+          playVideo();
+        }, { once: true });
+
+        videoElement.addEventListener('canplay', () => {
+          console.log('비디오 재생 준비 완료');
+          playVideo();
+        }, { once: true });
+
+        // 즉시 재생 시도 (이미 로드된 경우를 위해)
+        if (videoElement.readyState >= 3) { // HAVE_FUTURE_DATA
+          playVideo();
+        }
       });
     }
     
@@ -110,14 +150,21 @@ async function startCamera() {
     
   } catch (error) {
     console.error('Error accessing camera:', error);
-    alert('카메라에 접근할 수 없습니다. 브라우저 설정을 확인하고 카메라 권한을 허용해주세요.');
+    alert('카메라에 접근할 수 없습니다. 브라우저 설정을 확인하고 카메라 권한을 허용해주세요.\n\n오류: ' + error.message);
   }
 }
 
 // 페이지 로드 시 카메라 시작 및 이벤트 리스너 등록
-window.addEventListener('load', () => {
+window.addEventListener('load', async () => {
   console.log('페이지 로드 완료');
-  startCamera();
+  
+  try {
+    await startCamera();
+    console.log('카메라 초기화 완료');
+  } catch (error) {
+    console.error('카메라 초기화 실패:', error);
+  }
+  
   updateGridOverlay();  // 초기 그리드 적용
   setupEventListeners(); // 이벤트 리스너 설정
 });
@@ -190,10 +237,14 @@ function setupEventListeners() {
   if (captureButton) {
     captureButton.addEventListener('click', (e) => {
       console.log('캡쳐 버튼 클릭');
+      e.stopPropagation();
+      e.preventDefault();
       captureScreenshot(e);
     });
     captureButton.addEventListener('touchend', (e) => {
       console.log('캡쳐 버튼 터치');
+      e.stopPropagation();
+      e.preventDefault();
       captureScreenshot(e);
     });
   }
@@ -236,6 +287,7 @@ function updateGridOverlay() {
   const gridOverlay = document.querySelector('.grid-overlay');
   if (gridOverlay) {
       gridOverlay.style.backgroundSize = `${gridSize}px ${gridSize}px`;
+      gridOverlay.style.backgroundPosition = '0 0'; // 격자가 정확히 0,0에서 시작
   }
 }
 
@@ -322,11 +374,13 @@ function handleTouchAction(touchPoint) {
   }
 
   // 격자 점 크기 및 간격
-  const tolerance = 40; // 모바일용 허용 오차 증가
+  const tolerance = 20; // 모바일용 허용 오차 줄임
 
   // 터치 좌표를 근접한 격자 점으로 스냅
-  const snappedX = Math.round(touchX / gridSize) * gridSize;
-  const snappedY = Math.round(touchY / gridSize) * gridSize;
+  const snappedX = Math.round(touchX / gridSize) * gridSize + 0.5; // 0.5를 더해서 반올림의 정확성 향상
+  const snappedY = Math.round(touchY / gridSize) * gridSize + 0.5; // 0.5를 더해서 반올림의 정확성 향상
+  
+  console.log(`터치 좌표: (${touchX}, ${touchY}), 스냅된 좌표: (${snappedX}, ${snappedY}), 격자 크기: ${gridSize}`);
 
   // 터치 좌표가 격자 점과 충분히 가까운지 확인
   if (Math.abs(touchX - snappedX) <= tolerance && Math.abs(touchY - snappedY) <= tolerance) {
@@ -370,11 +424,13 @@ function handleClick(event) {
   }
 
   // 격자 점 크기 및 간격
-  const tolerance = 20; // 클릭 좌표와 격자 점 사이의 허용 오차
+  const tolerance = 15; // 클릭 좌표와 격자 점 사이의 허용 오차 (데스크톱용 더 정확하게)
 
   // 클릭 좌표를 근접한 격자 점으로 스냅
-  const snappedX = Math.round(clickX / gridSize) * gridSize;
-  const snappedY = Math.round(clickY / gridSize) * gridSize;
+  const snappedX = Math.round(clickX / gridSize) * gridSize - 1;
+  const snappedY = Math.round(clickY / gridSize) * gridSize - 1;
+
+  console.log(`클릭 좌표: (${clickX}, ${clickY}), 스냅된 좌표: (${snappedX}, ${snappedY}), 격자 크기: ${gridSize}`);
 
   // 클릭 좌표가 격자 점과 충분히 가까운지 확인
   if (Math.abs(clickX - snappedX) <= tolerance && Math.abs(clickY - snappedY) <= tolerance) {
@@ -395,13 +451,15 @@ function addPoint(x, y) {
   const highlight = document.createElement('div');
   highlight.classList.add('highlight');
   highlight.style.position = 'absolute';
-  highlight.style.width = '30px'; // 모바일용 크기 증가
-  highlight.style.height = '30px';
-  highlight.style.backgroundColor = 'rgba(255, 0, 0, 0.8)';
+  highlight.style.width = '12px'; // 크기를 더 작게 조정
+  highlight.style.height = '12px';
+  highlight.style.backgroundColor = 'rgba(255, 0, 0, 0.9)';
   highlight.style.borderRadius = '50%';
-  highlight.style.border = '3px solid white'; // 경계선 강화
-  highlight.style.top = `${y - 15}px`;
-  highlight.style.left = `${x - 15}px`;
+  highlight.style.border = '2px solid white';
+  highlight.style.boxShadow = '0 0 4px rgba(0,0,0,0.5)'; // 그림자 추가로 가시성 향상
+  // 격자 교차점에 정확히 중심을 맞춤 (6px은 12px의 절반)
+  highlight.style.top = `${y - 6}px`;
+  highlight.style.left = `${x - 6}px`;
   highlight.style.pointerEvents = 'none';
   highlight.style.zIndex = '15';
   highlight.setAttribute('data-x', x);
@@ -426,20 +484,21 @@ function removePoint(x, y) {
   
   points = points.filter(point => point.x !== x || point.y !== y);
   
-  // 선분도 제거
-  const existingLine = document.querySelector('div[style*="rgba(0, 0, 255, 0.7)"]');
-  if (existingLine) {
-    existingLine.remove();
-  }
+  // 선분도 제거 (클래스와 스타일 둘 다 확인)
+  const existingLines = document.querySelectorAll('.connection-line, div[style*="rgba(0, 0, 255"]');
+  existingLines.forEach(line => line.remove());
   
   // 버튼 초기 상태로 복원
   resetButtonsToInitial();
 }
 
 function drawLine(point1, point2) {
+  console.log('선분 그리기:', point1, point2);
+  
   const line = document.createElement('div');
+  line.classList.add('connection-line'); // 클래스 추가
   line.style.position = 'absolute';
-  line.style.backgroundColor = 'rgba(0, 0, 255, 0.7)'; // 파란색 반투명
+  line.style.backgroundColor = 'rgba(0, 0, 255, 0.8)'; // 파란색 반투명
   line.style.zIndex = '14'; // 강조 표시 아래
   line.style.pointerEvents = 'none';
 
@@ -449,10 +508,14 @@ function drawLine(point1, point2) {
 
   line.style.width = `${length}px`;
   line.style.height = '3px';
-  line.style.top = `${point1.y}px`;
-  line.style.left = `${point1.x}px`;
-  line.style.transformOrigin = '0 0';
+  // 격자점 중심에서 정확히 시작하도록 위치 설정 (선 두께 고려)
+  line.style.top = `${point1.y - 1.5}px`; // 선 두께(3px)의 절반만큼 위로
+  line.style.left = `${point1.x}px`; // 격자점 중심에서 시작
+  line.style.transformOrigin = '0 50%'; // 선의 시작점을 기준으로 회전
   line.style.transform = `rotate(${Math.atan2(dy, dx)}rad)`;
+  
+  console.log(`선분 위치: top=${point1.y - 1.5}, left=${point1.x}, 각도=${Math.atan2(dy, dx) * 180 / Math.PI}도`);
+  
   document.body.appendChild(line);
 
   // 1단계: 초기화, 거리 측정, 캡쳐만 활성화
@@ -638,8 +701,8 @@ function fallbackCapture() {
 
 function resetHighlights() {
   console.log('초기화 함수 실행');
-  // 기존 요소들 제거
-  document.querySelectorAll('.highlight, .triangle, div[style*="rgba(0, 255, 0, 0.5)"], div[style*="rgba(0, 0, 255, 0.7)"], .base-line, .height-line').forEach(el => el.remove());
+  // 기존 요소들 제거 - 모든 그래픽 요소 포함
+  document.querySelectorAll('.highlight, .triangle, .connection-line, .base-line, .height-line, div[style*="rgba(0, 255, 0, 0.5)"], div[style*="rgba(0, 0, 255"]').forEach(el => el.remove());
   
   points = [];
   triangleCreated = false; // 초기화 시 삼각형 생성 상태도 리셋
