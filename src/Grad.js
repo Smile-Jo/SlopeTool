@@ -109,6 +109,40 @@ function decreaseGridSize() {
   }
 }
 
+// 컨트롤 영역에서 클릭 차단 여부 확인 함수
+function isInControlArea(x, y) {
+  const controls = document.querySelector('.controls');
+  const infoPanel = document.querySelector('.info-panel');
+  
+  if (controls) {
+    const controlsRect = controls.getBoundingClientRect();
+    if (x >= controlsRect.left && x <= controlsRect.right && 
+        y >= controlsRect.top && y <= controlsRect.bottom) {
+      return true;
+    }
+  }
+  
+  if (infoPanel) {
+    const infoPanelRect = infoPanel.getBoundingClientRect();
+    if (x >= infoPanelRect.left && x <= infoPanelRect.right && 
+        y >= infoPanelRect.top && y <= infoPanelRect.bottom) {
+      return true;
+    }
+  }
+  
+  // 각 버튼들을 개별적으로도 확인
+  const buttons = document.querySelectorAll('button');
+  for (let button of buttons) {
+    const buttonRect = button.getBoundingClientRect();
+    if (x >= buttonRect.left && x <= buttonRect.right && 
+        y >= buttonRect.top && y <= buttonRect.bottom) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
 // 터치 이벤트 리스너 - 터치 유지되도록 수정
 document.addEventListener('touchstart', handleTouch, { passive: false });
 // 마우스 클릭 이벤트 리스너 추가 (데스크톱 지원)
@@ -125,6 +159,11 @@ function handleTouch(event) {
   const touch = event.touches[0];
   const touchX = touch.clientX;
   const touchY = touch.clientY;
+
+  // 컨트롤 영역에서 터치된 경우 무시
+  if (isInControlArea(touchX, touchY)) {
+    return;
+  }
 
   // 격자 점 크기 및 간격
   const tolerance = 30; // 터치 좌표와 격자 점 사이의 허용 오차 (모바일용 증가)
@@ -148,9 +187,8 @@ function handleTouch(event) {
         existingLine.remove();
       }
       
-      // 버튼 숨기기
-      document.getElementById('triangleButton').style.display = 'none';
-      document.getElementById('lengthButton').style.display = 'none';
+      // 버튼 초기 상태로 복원
+      resetButtonsToInitial();
     } else {
       // 강조 표시 요소 생성 (모바일 터치용 크기 증가)
       const highlight = document.createElement('div');
@@ -190,6 +228,11 @@ function handleClick(event) {
   const clickX = event.clientX;
   const clickY = event.clientY;
 
+  // 컨트롤 영역에서 클릭된 경우 무시
+  if (isInControlArea(clickX, clickY)) {
+    return;
+  }
+
   // 격자 점 크기 및 간격
   const tolerance = 20; // 클릭 좌표와 격자 점 사이의 허용 오차
 
@@ -212,9 +255,8 @@ function handleClick(event) {
         existingLine.remove();
       }
       
-      // 버튼 숨기기
-      document.getElementById('triangleButton').style.display = 'none';
-      document.getElementById('lengthButton').style.display = 'none';
+      // 버튼 초기 상태로 복원
+      resetButtonsToInitial();
     } else {
       // 강조 표시 요소 생성
       const highlight = document.createElement('div');
@@ -264,8 +306,13 @@ function drawLine(point1, point2) {
   line.style.transform = `rotate(${Math.atan2(dy, dx)}rad)`;
   document.body.appendChild(line);
 
-  // 선분이 그려진 후 triangleButton을 표시
-  document.getElementById('triangleButton').style.display = 'block';
+  // 1단계: 초기화, 거리 측정, 캡쳐만 활성화
+  document.getElementById('resetButton').style.display = 'block';
+  document.getElementById('lengthButton').style.display = 'block';
+  document.getElementById('triangleButton').style.display = 'none';
+  document.getElementById('captureButton').style.display = 'block';
+  document.getElementById('increaseGridButton').style.display = 'none';
+  document.getElementById('decreaseGridButton').style.display = 'none';
 }
 
 function drawTriangle(point1, point2) {
@@ -302,8 +349,13 @@ function drawTriangle(point1, point2) {
 
   triangleCreated = true; // 삼각형이 생성되었음을 표시
 
-  // 삼각형이 그려진 후 lengthButton을 표시
-  document.getElementById('lengthButton').style.display = 'block';
+  // 3단계: 초기화, 캡쳐만 활성화
+  document.getElementById('resetButton').style.display = 'block';
+  document.getElementById('lengthButton').style.display = 'none';
+  document.getElementById('triangleButton').style.display = 'none';
+  document.getElementById('captureButton').style.display = 'block';
+  document.getElementById('increaseGridButton').style.display = 'none';
+  document.getElementById('decreaseGridButton').style.display = 'none';
 }
 
 function drawBaseLine(point1, point2) {
@@ -358,35 +410,115 @@ function displayDimensions(point1, point2) {
     `;
     display.style.display = 'block'; // 요소를 표시
   }
+
+  // 2단계: 초기화, 삼각형 그리기, 캡쳐만 활성화
+  document.getElementById('resetButton').style.display = 'block';
+  document.getElementById('lengthButton').style.display = 'none';
+  document.getElementById('triangleButton').style.display = 'block';
+  document.getElementById('captureButton').style.display = 'block';
+  document.getElementById('increaseGridButton').style.display = 'none';
+  document.getElementById('decreaseGridButton').style.display = 'none';
 }
 
-// 화면에서 video 요소만 캡처
-function captureScreenshot() {
-  const videoElement = document.getElementById('video');
-
-  html2canvas(videoElement, {
-    scale: window.devicePixelRatio,
-    useCORS: true
+// 전체 화면 캡처
+function captureScreenshot(event) {
+  // 이벤트 전파 방지
+  if (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
+  
+  // 전체 body 요소를 캡처
+  html2canvas(document.body, {
+    allowTaint: true,
+    useCORS: true,
+    scale: 1,
+    width: window.innerWidth,
+    height: window.innerHeight,
+    scrollX: 0,
+    scrollY: 0,
+    backgroundColor: '#000000',
+    foreignObjectRendering: true,
+    logging: false
   }).then(canvas => {
-    const dataURL = canvas.toDataURL('image/png');
+    const dataURL = canvas.toDataURL('image/png', 1.0);
     const link = document.createElement('a');
     link.href = dataURL;
-    link.download = 'video_screenshot.png';
+    link.download = `slope_capture_${new Date().getTime()}.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    console.log('캡쳐 완료');
   }).catch(error => {
     console.error('Screenshot capture failed:', error);
+    // 대안: Canvas API 사용
+    fallbackCapture();
   });
 }
 
+// 대안 캡쳐 방법
+function fallbackCapture() {
+  try {
+    // video 요소 직접 캡쳐
+    const videoElement = document.getElementById('video');
+    if (videoElement && videoElement.videoWidth > 0) {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      canvas.width = videoElement.videoWidth;
+      canvas.height = videoElement.videoHeight;
+      
+      ctx.drawImage(videoElement, 0, 0);
+      
+      const dataURL = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.href = dataURL;
+      link.download = `video_capture_${new Date().getTime()}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      console.log('비디오 캡쳐 완료');
+    } else {
+      alert('캡쳐할 수 있는 비디오가 없습니다.');
+    }
+  } catch (error) {
+    console.error('Fallback capture failed:', error);
+    alert('캡쳐에 실패했습니다.');
+  }
+}
+
 // 초기화, 직각삼각형, 길이 버튼 클릭 이벤트 리스너 추가
-document.getElementById('resetButton').addEventListener('click', resetHighlights);
-document.getElementById('triangleButton').addEventListener('click', () => drawTriangle(points[0], points[1]));
-document.getElementById('lengthButton').addEventListener('click', () => displayDimensions(points[0], points[1]));
+document.getElementById('resetButton').addEventListener('click', (e) => {
+  e.stopPropagation();
+  e.preventDefault();
+  resetHighlights();
+});
+
+document.getElementById('triangleButton').addEventListener('click', (e) => {
+  e.stopPropagation();
+  e.preventDefault();
+  drawTriangle(points[0], points[1]);
+});
+
+document.getElementById('lengthButton').addEventListener('click', (e) => {
+  e.stopPropagation();
+  e.preventDefault();
+  displayDimensions(points[0], points[1]);
+});
+
 document.getElementById('captureButton').addEventListener('click', captureScreenshot);
-document.getElementById('increaseGridButton').addEventListener('click', increaseGridSize);
-document.getElementById('decreaseGridButton').addEventListener('click', decreaseGridSize);
+
+document.getElementById('increaseGridButton').addEventListener('click', (e) => {
+  e.stopPropagation();
+  e.preventDefault();
+  increaseGridSize();
+});
+
+document.getElementById('decreaseGridButton').addEventListener('click', (e) => {
+  e.stopPropagation();
+  e.preventDefault();
+  decreaseGridSize();
+});
 
 function resetHighlights() {
   // 기존 요소들 제거
@@ -400,7 +532,17 @@ function resetHighlights() {
     display.style.display = 'none';
   }
 
-  // 버튼 초기 상태로 숨김
-  document.getElementById('triangleButton').style.display = 'none';
+  // 버튼 초기 상태로 복원
+  resetButtonsToInitial();
+}
+
+// 버튼 상태 관리 함수들
+function resetButtonsToInitial() {
+  // 초기 상태: 모든 버튼 표시
+  document.getElementById('resetButton').style.display = 'block';
   document.getElementById('lengthButton').style.display = 'none';
+  document.getElementById('triangleButton').style.display = 'none';
+  document.getElementById('captureButton').style.display = 'block';
+  document.getElementById('increaseGridButton').style.display = 'block';
+  document.getElementById('decreaseGridButton').style.display = 'block';
 }
