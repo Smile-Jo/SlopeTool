@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="common.css">
     <script async src="https://ga.jspm.io/npm:es-module-shims@1.10.0/dist/es-module-shims.js"></script>
     <script type="importmap">
       {
@@ -16,78 +17,8 @@
 
     <!-- 자바스크립트 모듈 -->
     <script src="./src/Slope.js" type="module" defer></script>
-    
-    <style>
-      html, body {
-        position: relative;
-        margin: 0;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        font-family: 'Arial', sans-serif;
-        background-color: #f5f5f5;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
-            
-      .input-container {
-        position: relative;
-        z-index: 10; /* Make sure it is above the video feed */
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        background-color: white;
-        padding: 30px;
-        border-radius: 15px;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-      }
-
-      input[type="number"] {
-        width: 200px;
-        padding: 10px;
-        margin: 10px 0;
-        border-radius: 8px;
-        border: 1px solid #ccc;
-        font-size: 16px;
-        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
-        transition: border-color 0.3s ease;
-      }
-
-      input[type="number"]:focus {
-        border-color: #4CAF50;
-        outline: none;
-      }
-
-      button {
-        width: 220px;
-        padding: 12px;
-        background-color: #4CAF50;
-        color: white;
-        font-size: 16px;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: background-color 0.3s ease, box-shadow 0.3s ease;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      }
-
-      button:hover {
-        background-color: #45a049;
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-      }
-
-      #container {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 1; /* Camera feed is the background */
-      }
-    </style>
   </head>
-  <body>
+  <body class="slope-page">
 
     <div class="input-container">
       <h2>경사로 길이 설정</h2>

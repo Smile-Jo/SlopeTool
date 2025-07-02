@@ -4,109 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>기울기 측정</title>
+    <link rel="stylesheet" href="common.css">
     <script type="module" src="./src/Grad.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <style>
-        html, body {
-            position: relative;
-            margin: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background-color: #f0f0f0;
-            font-family: 'Arial', sans-serif;
-        }
-
-        /* 그리드 스타일 */
-        .grid-overlay {
-            position: fixed;
-            pointer-events: none;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-size: 50px 50px;
-            background-image:
-              linear-gradient(to right, #000 2px, transparent 2px),
-              linear-gradient(to bottom, #000 2px, transparent 2px);
-            z-index: 10;
-            opacity: 0.4;
-        }
-
-        /* 비디오 화면 */
-        #video {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            z-index: 5;
-        }
-
-        /* 공통 버튼 스타일 */
-        button {
-            position: absolute;
-            left: 10px;
-            z-index: 20;
-            padding: 12px 20px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-
-        /* 각 버튼 위치 */
-        #resetButton { top: 10px; }
-        #triangleButton { top: 70px; 
-            display: none;    
-            background-color: transparent; /* Make the button background transparent */
-            color: transparent; /* Make the button text transparent */
-            border: none; /* Remove border to ensure full transparency */
-            cursor: pointer; /* Ensure the button is still clickable */
-          }
-        #lengthButton { top: 130px; 
-            display: none;    
-            background-color: transparent; /* Make the button background transparent */
-            color: transparent; /* Make the button text transparent */
-            border: none; /* Remove border to ensure full transparency */
-            cursor: pointer; /* Ensure the button is still clickable */
-          }
-        #captureButton { top: 190px; }
-        #increaseGridButton { top: 250px; }
-        #decreaseGridButton { top: 310px; }
-
-        /* 차원 표시 스타일 */
-        #dimensionDisplay {
-            position: fixed;
-            bottom: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 12px 20px;
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-            border-radius: 5px;
-            z-index: 20;
-            font-size: 14px;
-            display: none;
-        }
-    </style>
 </head>
-<body>
+<body class="grad-page">
     <video id="video" autoplay playsinline></video>
     <div class="grid-overlay"></div>
-    <button id="resetButton">초기화</button>
-    <button id="triangleButton">힌트 1</button>
-    <button id="lengthButton">힌트 2</button>
-    <button id="captureButton">캡쳐</button>
-    <button id="increaseGridButton">간격 +</button>
-    <button id="decreaseGridButton">간격 -</button>
-    <div id="dimensionDisplay">dx: 0px, dy: 0px</div>
+    
+    <div class="controls">
+        <button id="resetButton">초기화</button>
+        <button id="lengthButton" style="display: none;">기울기 선 그리기</button>
+        <button id="triangleButton" style="display: none;">삼각형 그리기</button>
+        <button id="captureButton">캡쳐</button>
+        <button id="increaseGridButton">간격 +</button>
+        <button id="decreaseGridButton">간격 -</button>
+    </div>
+    
+    <div class="info-panel">
+        <div id="dimensionDisplay">dx: 0px, dy: 0px</div>
+    </div>
+
+    <canvas id="overlay-canvas"></canvas>
+
 </body>
 </html>

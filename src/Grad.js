@@ -61,6 +61,8 @@ function decreaseGridSize() {
 
 // 화면에 터치 이벤트 리스너 추가
 document.addEventListener('touchstart', handleTouch);
+// 마우스 클릭 이벤트 리스너 추가 (데스크톱 지원)
+document.addEventListener('click', handleClick);
 
 function handleTouch(event) {
   // 두 점이 이미 추가된 경우 더 이상 추가하지 않음
@@ -98,6 +100,59 @@ function handleTouch(event) {
       highlight.style.top = `${snappedY - 9.5}px`;
       highlight.style.left = `${snappedX - 9.5}px`;
       highlight.style.pointerEvents = 'none'; 
+      highlight.style.zIndex = '15';
+      highlight.setAttribute('data-x', snappedX);
+      highlight.setAttribute('data-y', snappedY);
+
+      // 강조 표시 요소를 바디에 추가
+      document.body.appendChild(highlight);
+
+      // points 배열에 추가
+      points.push({ x: snappedX, y: snappedY });
+
+      // 두 점이 모두 추가되면 선분을 그리기
+      if (points.length === 2) {
+        drawLine(points[0], points[1]);
+      }
+    }
+  }
+}
+
+function handleClick(event) {
+  // 두 점이 이미 추가된 경우 더 이상 추가하지 않음
+  if (points.length >= 2) return;
+
+  // 클릭된 위치 좌표 가져오기
+  const clickX = event.clientX;
+  const clickY = event.clientY;
+
+  // 격자 점 크기 및 간격
+  const tolerance = 20; // 클릭 좌표와 격자 점 사이의 허용 오차
+
+  // 클릭 좌표를 근접한 격자 점으로 스냅
+  const snappedX = Math.round(clickX / gridSize) * gridSize;
+  const snappedY = Math.round(clickY / gridSize) * gridSize;
+
+  // 클릭 좌표가 격자 점과 충분히 가까운지 확인
+  if (Math.abs(clickX - snappedX) <= tolerance && Math.abs(clickY - snappedY) <= tolerance) {
+    const existingHighlight = document.querySelector(`.highlight[data-x="${snappedX}"][data-y="${snappedY}"]`);
+
+    if (existingHighlight) {
+      // 이미 강조 표시가 있으면 제거하고 points 배열에서도 제거
+      existingHighlight.remove();
+      points = points.filter(point => point.x !== snappedX || point.y !== snappedY);
+    } else {
+      // 강조 표시 요소 생성
+      const highlight = document.createElement('div');
+      highlight.classList.add('highlight');
+      highlight.style.position = 'absolute';
+      highlight.style.width = '20px';
+      highlight.style.height = '20px';
+      highlight.style.backgroundColor = 'rgba(255, 0, 0, 0.7)';
+      highlight.style.borderRadius = '50%';
+      highlight.style.top = `${snappedY - 9.5}px`;
+      highlight.style.left = `${snappedX - 9.5}px`;
+      highlight.style.pointerEvents = 'none';
       highlight.style.zIndex = '15';
       highlight.setAttribute('data-x', snappedX);
       highlight.setAttribute('data-y', snappedY);
