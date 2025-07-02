@@ -12,6 +12,8 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
+        slope: resolve(__dirname, 'Slope.html'),
+        grad: resolve(__dirname, 'Grad.html'),
       },
     },
   },
