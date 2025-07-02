@@ -1,7 +1,8 @@
 // 메인 기울기 측정 앱
 import { startCamera } from './camera.js';
 import { 
-  state,
+  points, 
+  triangleCreated, 
   addPoint, 
   removePoint, 
   drawTriangle, 
@@ -71,8 +72,8 @@ function setupButtonEvents() {
       console.log('삼각형 버튼 사용');
       e.stopPropagation();
       e.preventDefault();
-      if (state.points.length >= 2) {
-        drawTriangle(state.points[0], state.points[1]);
+      if (points.length >= 2) {
+        drawTriangle(points[0], points[1]);
       }
     });
   }
@@ -83,8 +84,8 @@ function setupButtonEvents() {
       console.log('거리 측정 버튼 사용');
       e.stopPropagation();
       e.preventDefault();
-      if (state.points.length >= 2) {
-        displayDimensions(state.points[0], state.points[1], gridSize);
+      if (points.length >= 2) {
+        displayDimensions(points[0], points[1], gridSize);
       }
     });
   }
@@ -95,7 +96,7 @@ function setupButtonEvents() {
       console.log('캡처 버튼 사용');
       e.stopPropagation();
       e.preventDefault();
-      captureScreenshot(state.points, state.triangleCreated, gridSize);
+      captureScreenshot(points, triangleCreated, gridSize);
     });
   }
 
@@ -156,11 +157,11 @@ function handleTouchEnd(event) {
   
   // 짧은 터치만 처리 (길게 누르면 무시)
   if (touchDuration < 300 && touchStartPoint) {
-    handleTouchAction(touchStartPoint, state.points, gridSize, addPoint, removePoint);
+    handleTouchAction(touchStartPoint, points, gridSize, addPoint, removePoint);
   }
 }
 
 // 클릭 처리
 function handleClick(event) {
-  handleClickAction(event, state.points, gridSize, addPoint, removePoint);
+  handleClickAction(event, points, gridSize, addPoint, removePoint);
 }
