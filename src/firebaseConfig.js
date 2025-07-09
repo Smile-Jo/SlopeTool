@@ -1,7 +1,7 @@
 // Firebase 설정 및 초기화
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, signOut } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, signOut, getRedirectResult } from "firebase/auth";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject, listAll } from "firebase/storage";
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, orderBy } from "firebase/firestore";
 
@@ -29,9 +29,20 @@ export const db = getFirestore(app);
 export const googleProvider = new GoogleAuthProvider();
 
 // 인증 관련 함수들
-export const signInWithGoogle = () => signInWithPopup(auth, googleProvider);
-export const signInWithGoogleRedirect = () => signInWithRedirect(auth, googleProvider);
+export const signInWithGoogle = () => signInWithRedirect(auth, googleProvider);
+export const signInWithGooglePopup = () => signInWithPopup(auth, googleProvider);
+export const getRedirectResultHandler = () => getRedirectResult(auth);
 export const logOut = () => signOut(auth);
+
+// 사용자 환경에 따라 로그인 방식 자동 선택
+export const signInWithGoogleAuto = () => {
+  // 모바일 환경에서는 리다이렉트, 데스크톱에서는 팝업
+  if (window.innerWidth <= 768 || /Mobi|Android/i.test(navigator.userAgent)) {
+    return signInWithRedirect(auth, googleProvider);
+  } else {
+    return signInWithPopup(auth, googleProvider);
+  }
+};
 
 // 스토리지 관련 함수들
 export const uploadImage = async (file, path) => {

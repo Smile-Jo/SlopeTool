@@ -1,5 +1,5 @@
 // 인증 관련 기능 모듈
-import { auth, signInWithGoogle, logOut } from './firebaseConfig.js';
+import { auth, signInWithGoogle, getRedirectResultHandler, logOut } from './firebaseConfig.js';
 import { onAuthStateChanged } from 'firebase/auth';
 
 // DOM 요소들
@@ -11,8 +11,18 @@ const userInfo = document.getElementById('userInfo');
 const authenticatedFeatures = document.getElementById('authenticatedFeatures');
 
 // 페이지 로드 시 인증 상태 리스너 설정
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   console.log('인증 모듈 로드됨');
+  
+  // 리다이렉트 결과 확인 (Google 로그인 후 돌아온 경우)
+  try {
+    const result = await getRedirectResultHandler();
+    if (result) {
+      console.log('리다이렉트 로그인 성공:', result.user.displayName);
+    }
+  } catch (error) {
+    console.error('리다이렉트 로그인 오류:', error);
+  }
   
   // 인증 상태 변화 감지
   onAuthStateChanged(auth, (user) => {
@@ -41,8 +51,9 @@ document.addEventListener('DOMContentLoaded', () => {
 // 로그인 처리
 async function handleLogin() {
   try {
-    const result = await signInWithGoogle();
-    console.log('로그인 성공:', result.user.displayName);
+    // 리다이렉트 방식으로 로그인 시작
+    await signInWithGoogle();
+    // 이 지점에 도달하지 않음 (페이지가 리다이렉트됨)
   } catch (error) {
     console.error('로그인 실패:', error);
     alert('로그인에 실패했습니다. 다시 시도해주세요.');
