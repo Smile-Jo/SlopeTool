@@ -1,0 +1,20 @@
+[build]
+  # Vite 빌드 결과물 디렉토리
+  publish = "dist"
+  command = "npm run build"
+
+# HTML 파일들이 정상적으로 서빙되도록 헤더 설정
+[[headers]]
+  for = "*.html"
+  [headers.values]
+    Content-Type = "text/html; charset=utf-8"
+
+[[headers]]
+  for = "*.js"
+  [headers.values]
+    Content-Type = "application/javascript; charset=utf-8"
+
+[[headers]]
+  for = "*.css"
+  [headers.values]
+    Content-Type = "text/css; charset=utf-8"

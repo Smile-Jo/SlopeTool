@@ -1,0 +1,17 @@
+# Netlify redirects file
+# HTML 파일들에 대한 라우팅 규칙
+
+# 기본 페이지들 - 확장자 없이도 접근 가능하도록
+/imageUpload        /imageUpload.html   200
+/imageList          /imageList.html     200
+/Slope              /Slope.html         200
+/Grad               /Grad.html          200
+
+# 확장자 포함 접근
+/imageUpload.html   /imageUpload.html   200
+/imageList.html     /imageList.html     200
+/Slope.html         /Slope.html         200
+/Grad.html          /Grad.html          200
+
+# SPA fallback - 다른 모든 경로는 index.html로
+/*                  /index.html         200
