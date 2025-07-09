@@ -24,6 +24,6 @@ export default defineConfig({
           firebase: ['firebase/app', 'firebase/auth', 'firebase/storage', 'firebase/firestore', 'firebase/analytics']
         }
       }
-    },
+    },        
   },
 })

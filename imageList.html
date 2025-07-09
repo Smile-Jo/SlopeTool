@@ -4,15 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>이미지 목록 - 기울기 측정 도구</title>
-    <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="styles/base.css">
+    <link rel="stylesheet" href="styles/pages.css">
+    <link rel="stylesheet" href="styles/auth.css">
+    <link rel="stylesheet" href="styles/image-grid.css">
+    <link rel="stylesheet" href="styles/modal.css">
+    <link rel="stylesheet" href="styles/pagination.css">
+    <link rel="stylesheet" href="styles/responsive.css">
     <script type="module" src="./src/imageList.js"></script>
 </head>
-<body class="main-page">
+<body class="image-list-page">
 
-    <div class="container">
+    <div class="image-list-container">
         <h1>업로드된 이미지 목록</h1>
-        
-        <!-- 인증 상태 확인 -->
         <div id="authCheck" class="auth-status">
             <p>로그인 상태를 확인하는 중...</p>
         </div>
@@ -73,6 +77,13 @@
         <div id="imageListSection" class="image-list-section" style="display: none;">
             <div id="imageCount" class="image-count"></div>
             <div id="imageGrid" class="image-grid"></div>
+            
+            <!-- 페이지네이션 -->
+            <div id="pagination" class="pagination" style="display: none;">
+                <button id="prevPage" class="page-button">이전</button>
+                <div id="pageNumbers" class="page-numbers"></div>
+                <button id="nextPage" class="page-button">다음</button>
+            </div>
         </div>
 
         <!-- 빈 목록 메시지 -->

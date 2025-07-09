@@ -187,8 +187,14 @@ export function resetHighlights() {
   _triangleCreated = false;
 
   const display = document.getElementById('dimensionDisplay');
+  const infoPanel = document.getElementById('infoPanel');
+  
   if (display) {
     display.style.display = 'none';
+  }
+  
+  if (infoPanel) {
+    infoPanel.style.display = 'none'; // info-panel 전체를 숨김
   }
 
   resetButtonsToInitial();
@@ -209,12 +215,15 @@ export function displayDimensions(point1, point2, gridSize) {
   const dy = Math.abs(point2.y - point1.y);
 
   const display = document.getElementById('dimensionDisplay');
-  if (display) {
+  const infoPanel = document.getElementById('infoPanel');
+  
+  if (display && infoPanel) {
     display.innerHTML = `
       수평 거리: <span style="color: yellow;">${(dx / gridSize)}</span> 
       &nbsp;&nbsp; 수직 거리: <span style="color: red;">${(dy / gridSize)}</span>
     `;
     display.style.display = 'block';
+    infoPanel.style.display = 'block'; // info-panel 전체를 보이게 함
   }
 
   // 2단계: 초기화, 삼각형 그리기만 활성화

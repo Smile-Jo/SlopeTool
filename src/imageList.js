@@ -6,10 +6,14 @@ import { getImageList, deleteImageData, deleteImage } from './firebaseConfig.js'
 let authCheck, filterSection, loadingSection, imageListSection, emptyMessage;
 let gradeFilter, classFilter, sortOrder, refreshButton, imageGrid, imageCount;
 let imageModal, closeModal, modalImageContainer, modalImageInfo, deleteImageButton, copyUrlButton;
+let pagination, prevPage, nextPage, pageNumbers;
 
 // 전역 변수
 let allImages = [];
 let currentImageData = null;
+let filteredImages = [];
+let currentPage = 1;
+const imagesPerPage = 15;
 
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', async () => {
@@ -49,6 +53,12 @@ function initializeDOMElements() {
   modalImageInfo = document.getElementById('modalImageInfo');
   deleteImageButton = document.getElementById('deleteImageButton');
   copyUrlButton = document.getElementById('copyUrlButton');
+  
+  // 페이지네이션 요소
+  pagination = document.getElementById('pagination');
+  prevPage = document.getElementById('prevPage');
+  nextPage = document.getElementById('nextPage');
+  pageNumbers = document.getElementById('pageNumbers');
 }
 
 // 사용자 인증 상태 확인
@@ -101,6 +111,10 @@ function setupEventListeners() {
   if (deleteImageButton) deleteImageButton.addEventListener('click', handleDeleteImage);
   if (copyUrlButton) copyUrlButton.addEventListener('click', handleCopyUrl);
   
+  // 페이지네이션 이벤트
+  if (prevPage) prevPage.addEventListener('click', () => goToPage(currentPage - 1));
+  if (nextPage) nextPage.addEventListener('click', () => goToPage(currentPage + 1));
+  
   // ESC 키로 모달 닫기
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeImageModal();
@@ -128,60 +142,147 @@ async function loadImageList() {
 
 // 필터 적용
 function applyFilters() {
-  let filteredImages = [...allImages];
+  let filtered = [...allImages];
   
   // 학년 필터
   const selectedGrade = gradeFilter?.value;
   if (selectedGrade) {
-    filteredImages = filteredImages.filter(img => img.grade === parseInt(selectedGrade));
+    filtered = filtered.filter(img => img.grade === parseInt(selectedGrade));
   }
   
   // 반 필터
   const selectedClass = classFilter?.value;
   if (selectedClass) {
-    filteredImages = filteredImages.filter(img => img.classNumber === parseInt(selectedClass));
+    filtered = filtered.filter(img => img.classNumber === parseInt(selectedClass));
   }
   
   // 정렬
   const sortBy = sortOrder?.value || 'newest';
   switch (sortBy) {
     case 'newest':
-      filteredImages.sort((a, b) => new Date(b.timestamp.seconds * 1000) - new Date(a.timestamp.seconds * 1000));
+      filtered.sort((a, b) => new Date(b.timestamp.seconds * 1000) - new Date(a.timestamp.seconds * 1000));
       break;
     case 'oldest':
-      filteredImages.sort((a, b) => new Date(a.timestamp.seconds * 1000) - new Date(b.timestamp.seconds * 1000));
+      filtered.sort((a, b) => new Date(a.timestamp.seconds * 1000) - new Date(b.timestamp.seconds * 1000));
       break;
     case 'name':
-      filteredImages.sort((a, b) => a.userName.localeCompare(b.userName));
+      filtered.sort((a, b) => a.userName.localeCompare(b.userName));
       break;
     case 'grade':
-      filteredImages.sort((a, b) => a.grade - b.grade || a.classNumber - b.classNumber);
+      filtered.sort((a, b) => a.grade - b.grade || a.classNumber - b.classNumber);
       break;
   }
   
-  displayImages(filteredImages);
+  filteredImages = filtered;
+  currentPage = 1; // 필터 변경 시 첫 페이지로 이동
+  displayCurrentPage();
 }
 
-// 이미지 표시
-function displayImages(images) {
-  if (images.length === 0) {
+// 현재 페이지 표시
+function displayCurrentPage() {
+  if (filteredImages.length === 0) {
     showEmptyMessage();
     return;
   }
   
+  const totalPages = Math.ceil(filteredImages.length / imagesPerPage);
+  const startIndex = (currentPage - 1) * imagesPerPage;
+  const endIndex = startIndex + imagesPerPage;
+  const currentImages = filteredImages.slice(startIndex, endIndex);
+  
   // 이미지 개수 표시
-  imageCount.textContent = `총 ${images.length}개의 이미지`;
+  imageCount.textContent = `총 ${filteredImages.length}개의 이미지 (${currentPage}/${totalPages} 페이지)`;
   
   // 이미지 그리드 생성
-  imageGrid.innerHTML = images.map(image => createImageCard(image)).join('');
+  imageGrid.innerHTML = currentImages.map(image => createImageCard(image)).join('');
   
   // 이미지 카드 클릭 이벤트
   const imageCards = imageGrid.querySelectorAll('.image-card');
   imageCards.forEach((card, index) => {
-    card.addEventListener('click', () => openImageModal(images[index]));
+    const actualIndex = startIndex + index;
+    card.addEventListener('click', () => openImageModal(filteredImages[actualIndex]));
   });
   
+  // 페이지네이션 업데이트
+  updatePagination(totalPages);
+  
   showImageList();
+}
+
+// 페이지네이션 업데이트
+function updatePagination(totalPages) {
+  if (totalPages <= 1) {
+    pagination.style.display = 'none';
+    return;
+  }
+  
+  pagination.style.display = 'flex';
+  
+  // 이전/다음 버튼 상태
+  prevPage.disabled = currentPage === 1;
+  nextPage.disabled = currentPage === totalPages;
+  
+  // 페이지 번호 생성
+  pageNumbers.innerHTML = '';
+  
+  // 표시할 페이지 번호 범위 계산
+  let startPage = Math.max(1, currentPage - 2);
+  let endPage = Math.min(totalPages, currentPage + 2);
+  
+  // 시작 페이지가 1이 아니면 1 추가
+  if (startPage > 1) {
+    addPageNumber(1);
+    if (startPage > 2) {
+      addEllipsis();
+    }
+  }
+  
+  // 현재 범위의 페이지 번호들
+  for (let i = startPage; i <= endPage; i++) {
+    addPageNumber(i);
+  }
+  
+  // 끝 페이지가 총 페이지 수가 아니면 총 페이지 수 추가
+  if (endPage < totalPages) {
+    if (endPage < totalPages - 1) {
+      addEllipsis();
+    }
+    addPageNumber(totalPages);
+  }
+}
+
+// 페이지 번호 버튼 추가
+function addPageNumber(pageNum) {
+  const pageButton = document.createElement('span');
+  pageButton.className = `page-number ${pageNum === currentPage ? 'active' : ''}`;
+  pageButton.textContent = pageNum;
+  pageButton.addEventListener('click', () => goToPage(pageNum));
+  pageNumbers.appendChild(pageButton);
+}
+
+// 생략 표시 추가
+function addEllipsis() {
+  const ellipsis = document.createElement('span');
+  ellipsis.className = 'page-number';
+  ellipsis.textContent = '...';
+  ellipsis.style.cursor = 'default';
+  ellipsis.style.pointerEvents = 'none';
+  pageNumbers.appendChild(ellipsis);
+}
+
+// 특정 페이지로 이동
+function goToPage(pageNum) {
+  const totalPages = Math.ceil(filteredImages.length / imagesPerPage);
+  if (pageNum < 1 || pageNum > totalPages) return;
+  
+  currentPage = pageNum;
+  displayCurrentPage();
+  
+  // 페이지 변경 시 스크롤을 맨 위로
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
 }
 
 // 이미지 카드 생성
@@ -212,14 +313,32 @@ function openImageModal(imageData) {
   const uploadDate = new Date(imageData.timestamp.seconds * 1000).toLocaleString('ko-KR');
   const fileSize = (imageData.fileSize / 1024 / 1024).toFixed(2);
   
+  // 이미지 로딩 상태 표시
   modalImageContainer.innerHTML = `
-    <img src="${imageData.imageUrl}" alt="${imageData.originalName}" class="modal-image">
+    <div style="color: white; text-align: center;">이미지 로딩 중...</div>
   `;
+  
+  // 이미지 생성 및 로드
+  const img = new Image();
+  img.onload = function() {
+    modalImageContainer.innerHTML = `
+      <img src="${imageData.imageUrl}" alt="${imageData.originalName}" class="modal-image">
+    `;
+  };
+  img.onerror = function() {
+    modalImageContainer.innerHTML = `
+      <div style="color: white; text-align: center; padding: 20px;">
+        <p>이미지를 불러올 수 없습니다.</p>
+        <p>URL: ${imageData.imageUrl}</p>
+      </div>
+    `;
+  };
+  img.src = imageData.imageUrl;
   
   modalImageInfo.innerHTML = `
     <h3>${imageData.userName}</h3>
     <p><strong>학년/반:</strong> ${imageData.grade}학년 ${imageData.classNumber}반</p>
-    <p><strong>업로드 날짜:</strong> ${uploadDate}</p>
+    <p><strong>업로드 시간:</strong> ${uploadDate}</p>
     <p><strong>파일명:</strong> ${imageData.originalName}</p>
     <p><strong>파일 크기:</strong> ${fileSize} MB</p>
     ${imageData.description ? `<p><strong>설명:</strong> ${imageData.description}</p>` : ''}
@@ -259,8 +378,15 @@ async function handleDeleteImage() {
     alert('이미지가 성공적으로 삭제되었습니다.');
     closeImageModal();
     
-    // 목록 새로고침
+    // 목록 새로고침 (현재 페이지 유지하되, 페이지가 범위를 벗어나면 조정)
     await loadImageList();
+    
+    // 현재 페이지가 총 페이지 수를 초과하면 마지막 페이지로 이동
+    const totalPages = Math.ceil(filteredImages.length / imagesPerPage);
+    if (currentPage > totalPages) {
+      currentPage = Math.max(1, totalPages);
+    }
+    displayCurrentPage();
     
   } catch (error) {
     console.error('이미지 삭제 실패:', error);

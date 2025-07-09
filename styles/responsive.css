@@ -1,0 +1,131 @@
+/* ===========================================
+   반응형 디자인
+   =========================================== */
+
+/* 모바일 기기에서 제목 크기 조정 */
+@media (max-width: 480px) {
+    .container h1 {
+        font-size: 18px;
+        line-height: 1.2;
+    }
+}
+
+/* 태블릿 환경 */
+@media (max-width: 1024px) and (min-width: 769px) {
+    .image-grid {
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(5, 1fr);
+        gap: 18px;
+        min-height: 700px;
+    }
+    
+    .image-card {
+        height: 220px;
+    }
+    
+    .image-thumbnail {
+        height: 130px;
+    }
+}
+
+/* 모바일 환경 */
+@media (max-width: 768px) {
+    .container {
+        padding: 20px;
+        margin: 10px;
+    }
+    
+    .image-list-page {
+        padding: 10px 0;
+    }
+    
+    .image-list-container {
+        width: 95%;
+        padding: 20px;
+        margin: 0 auto;
+    }
+    
+    .filter-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .filter-group {
+        min-width: auto;
+    }
+    
+    .image-grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: none;
+        gap: 15px;
+        max-width: 100%;
+        min-height: auto;
+    }
+    
+    .image-card {
+        height: 280px;
+    }
+    
+    .image-thumbnail {
+        height: 160px;
+    }
+    
+    .pagination {
+        flex-wrap: wrap;
+        gap: 5px;
+        padding: 15px 10px;
+    }
+    
+    .page-numbers {
+        order: 3;
+        width: 100%;
+        justify-content: center;
+        margin-top: 10px;
+    }
+    
+    .page-number {
+        padding: 6px 10px;
+        font-size: 12px;
+        min-width: 35px;
+    }
+    
+    .modal-content {
+        max-width: 95vw;
+        max-height: 90vh;
+        min-width: 280px;
+        margin: 10px;
+    }
+    
+    .modal {
+        padding: 10px;
+    }
+    
+    .modal-image-container {
+        min-height: 150px;
+        max-height: calc(90vh - 160px);
+        padding: 10px;
+    }
+    
+    .modal-actions {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 480px) {
+    .container h1 {
+        font-size: 18px;
+        line-height: 1.3;
+    }
+    
+    .image-card {
+        margin-bottom: 15px;
+    }
+    
+    .close {
+        top: 10px;
+        right: 15px;
+        font-size: 24px;
+        width: 30px;
+        height: 30px;
+    }
+}
