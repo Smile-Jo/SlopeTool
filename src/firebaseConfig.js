@@ -28,8 +28,12 @@ export const db = getFirestore(app);
 // 언어 설정 (사용자 기기 언어 사용)
 auth.useDeviceLanguage();
 
-// Google 인증 제공자 (단순화)
+// Google 인증 제공자 (사파리 캐시 문제 해결)
 export const googleProvider = new GoogleAuthProvider();
+// 매번 계정 선택 화면 표시 (사파리 자동 로그인 방지)
+googleProvider.setCustomParameters({
+  prompt: 'select_account'
+});
 
 // 인증 관련 함수들
 export const signInWithGooglePopup = () => signInWithPopup(auth, googleProvider);
