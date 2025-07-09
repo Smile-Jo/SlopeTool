@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>이미지 업로드 - 기울기 측정 도구</title>
+    <link rel="stylesheet" href="common.css">
+    <script type="module" src="./src/imageUpload.js"></script>
+</head>
+<body class="main-page">
+
+    <div class="container">
+        <h1>기울기 측정 이미지 업로드</h1>
+        
+        <!-- 인증 상태 확인 -->
+        <div id="authCheck" class="auth-status">
+            <p>로그인 상태를 확인하는 중...</p>
+        </div>
+
+        <!-- 업로드 폼 -->
+        <form id="uploadForm" class="upload-form" style="display: none;">
+            <div class="form-group">
+                <label for="userName">사용자 이름:</label>
+                <input type="text" id="userName" name="userName" required placeholder="이름을 입력하세요">
+            </div>
+
+            <div class="form-group">
+                <label for="grade">학년:</label>
+                <select id="grade" name="grade" required>
+                    <option value="">학년 선택</option>
+                    <option value="1">1학년</option>
+                    <option value="2">2학년</option>
+                    <option value="3">3학년</option>
+                    <option value="4">4학년</option>
+                    <option value="5">5학년</option>
+                    <option value="6">6학년</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="classNumber">반:</label>
+                <select id="classNumber" name="classNumber" required>
+                    <option value="">반 선택</option>
+                    <option value="1">1반</option>
+                    <option value="2">2반</option>
+                    <option value="3">3반</option>
+                    <option value="4">4반</option>
+                    <option value="5">5반</option>
+                    <option value="6">6반</option>
+                    <option value="7">7반</option>
+                    <option value="8">8반</option>
+                    <option value="9">9반</option>
+                    <option value="10">10반</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="imageFile">이미지 선택:</label>
+                <input type="file" id="imageFile" name="imageFile" accept="image/*" required>
+                <div id="imagePreview" class="image-preview"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="description">설명 (선택사항):</label>
+                <textarea id="description" name="description" placeholder="이미지에 대한 설명을 입력하세요" rows="3"></textarea>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" id="uploadButton" class="submit-button">업로드</button>
+                <button type="button" id="cancelButton" class="cancel-button">취소</button>
+            </div>
+        </form>
+
+        <!-- 업로드 진행 상태 -->
+        <div id="uploadProgress" class="upload-progress" style="display: none;">
+            <p>이미지를 업로드하는 중...</p>
+            <div class="progress-bar">
+                <div id="progressFill" class="progress-fill"></div>
+            </div>
+        </div>
+
+        <!-- 메인으로 돌아가기 -->
+        <div class="navigation">
+            <a href="./index.html" class="nav-link">메인으로 돌아가기</a>
+            <a href="./imageList.html" class="nav-link">이미지 목록 보기</a>
+        </div>
+    </div>
+
+</body>
+</html>

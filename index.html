@@ -5,13 +5,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>우리 주변의 기울기 탐색하기</title>
     <link rel="stylesheet" href="common.css">
+    <script type="module" src="./src/auth.js"></script>
 </head>
 <body class="main-page">
 
     <div class="container">
         <h1>우리 주변의 기울기 탐색하기</h1>
-        <a href="./Slope.html">3D 경사로 모델 관찰</a>
-        <a href="./Grad.html">기울기 측정</a>
+        
+        <!-- 로그인 상태 표시 - 제목 아래로 이동 -->
+        <div id="authStatus" class="auth-status-inline">
+            <div id="loginSection" style="display: block;">
+                <button id="loginButton" class="auth-button">Google로 로그인</button>
+            </div>
+            <div id="userSection" style="display: none;">
+                <div id="userInfo"></div>
+                <button id="logoutButton" class="auth-button">로그아웃</button>
+            </div>
+        </div>
+        
+        <!-- 메인 기능 버튼들 -->
+        <div class="main-buttons">
+            <a href="./Slope.html" class="main-link">3D 경사로 모델 관찰</a>
+            <a href="./Grad.html" class="main-link">기울기 측정</a>
+            
+            <!-- 새로 추가되는 기능 버튼들 -->
+            <div id="authenticatedFeatures" style="display: none;">
+                <a href="./imageUpload.html" class="main-link">이미지 업로드</a>
+                <a href="./imageList.html" class="main-link">이미지 목록 확인</a>
+            </div>
+        </div>
+        
         <p>기울기를 관찰하고 측정해보세요!</p>
     </div>
 

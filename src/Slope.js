@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // MindAR 초기화
     const mindarThree = new MindARThree({
       container: document.getElementById('container'),  // AR 렌더링 컨테이너
-      imageTargetSrc: './Target.mind' // 이미지 인식을 위한 타겟 파일
+      imageTargetSrc: './public/Target.mind' // 이미지 인식을 위한 타겟 파일
     });
     const { renderer, scene, camera } = mindarThree;
 
