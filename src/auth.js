@@ -1,5 +1,5 @@
 // 인증 관련 기능 모듈
-import { auth, signInWithGooglePopup, signInWithGoogleRedirect, getRedirectResultHandler, logOut } from './firebaseConfig.js';
+import { auth, signInWithGooglePopup, logOut } from './firebaseConfig.js';
 import { onAuthStateChanged } from 'firebase/auth';
 
 // DOM 요소들
@@ -13,16 +13,6 @@ const authenticatedFeatures = document.getElementById('authenticatedFeatures');
 // 페이지 로드 시 인증 상태 리스너 설정
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('인증 모듈 로드됨');
-  
-  // 리다이렉트 결과 확인 (모바일에서 Google 로그인 후 돌아온 경우)
-  try {
-    const result = await getRedirectResultHandler();
-    if (result) {
-      console.log('리다이렉트 로그인 성공:', result.user.displayName);
-    }
-  } catch (error) {
-    console.error('리다이렉트 로그인 오류:', error);
-  }
   
   // 인증 상태 변화 감지
   onAuthStateChanged(auth, (user) => {
@@ -51,20 +41,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 // 로그인 처리
 async function handleLogin() {
   try {
-    // 모바일 환경 감지
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    const isSmallScreen = window.innerWidth <= 768;
-    
-    if (isMobile || isSmallScreen) {
-      // 모바일: 리다이렉트 방식 사용
-      console.log('모바일 환경 - 리다이렉트 방식으로 로그인');
-      await signInWithGoogleRedirect();
-    } else {
-      // PC: 팝업 방식 사용
-      console.log('PC 환경 - 팝업 방식으로 로그인');
-      const result = await signInWithGooglePopup();
-      console.log('로그인 성공:', result.user.displayName);
-    }
+    // 모든 환경에서 팝업 방식 사용
+    console.log('팝업 방식으로 로그인');
+    const result = await signInWithGooglePopup();
+    console.log('로그인 성공:', result.user.displayName);
   } catch (error) {
     console.error('로그인 실패:', error);
     
