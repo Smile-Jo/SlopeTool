@@ -27,6 +27,13 @@ export const db = getFirestore(app);
 
 // Google 인증 제공자
 export const googleProvider = new GoogleAuthProvider();
+// 추가 스코프 설정 (선택사항)
+googleProvider.addScope('profile');
+googleProvider.addScope('email');
+// 언어 설정
+googleProvider.setCustomParameters({
+  'display': 'popup'
+});
 
 // 인증 관련 함수들
 export const signInWithGoogle = () => signInWithRedirect(auth, googleProvider);
