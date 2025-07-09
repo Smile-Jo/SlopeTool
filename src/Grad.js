@@ -8,7 +8,6 @@ import {
   resetHighlights, 
   displayDimensions 
 } from './drawing.js';
-import { captureScreenshot } from './capture.js';
 import { gridSize, updateGridOverlay, increaseGridSize, decreaseGridSize } from './grid.js';
 import { handleTouchAction, handleClickAction } from './events.js';
 
@@ -50,7 +49,6 @@ function setupButtonEvents() {
     reset: document.getElementById('resetButton'),
     triangle: document.getElementById('triangleButton'),
     length: document.getElementById('lengthButton'),
-    capture: document.getElementById('captureButton'),
     increaseGrid: document.getElementById('increaseGridButton'),
     decreaseGrid: document.getElementById('decreaseGridButton')
   };
@@ -86,16 +84,6 @@ function setupButtonEvents() {
       if (state.points.length >= 2) {
         displayDimensions(state.points[0], state.points[1], gridSize);
       }
-    });
-  }
-
-  // 캡처 버튼
-  if (buttons.capture) {
-    addButtonEventListeners(buttons.capture, (e) => {
-      console.log('캡처 버튼 사용');
-      e.stopPropagation();
-      e.preventDefault();
-      captureScreenshot(state.points, state.triangleCreated, gridSize);
     });
   }
 

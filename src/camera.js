@@ -131,7 +131,7 @@ export async function startCamera() {
         }, { once: true });
 
         // 즉시 재생 시도 (이미 로드된 경우를 위해)
-        if (videoElement.readyState >= 3) { // HAVE_FUTURE_DATA
+        if (videoElement.readyState >= 3) { // HAVE_FUTURE_DATA 상태
           playVideo();
         }
       });
@@ -147,7 +147,7 @@ export async function startCamera() {
     }
     
   } catch (error) {
-    console.error('Error accessing camera:', error);
+    console.error('카메라 접근 오류:', error);
     alert('카메라에 접근할 수 없습니다. 브라우저 설정을 확인하고 카메라 권한을 허용해주세요.\n\n오류: ' + error.message);
   }
 }

@@ -84,11 +84,10 @@ export function drawLine(point1, point2) {
   
   document.body.appendChild(line);
 
-  // 1단계: 초기화, 거리 측정, 캡쳐만 활성화
+  // 1단계: 초기화, 거리 측정만 활성화
   document.getElementById('resetButton').style.display = 'block';
   document.getElementById('lengthButton').style.display = 'block';
   document.getElementById('triangleButton').style.display = 'none';
-  document.getElementById('captureButton').style.display = 'block';
   document.getElementById('increaseGridButton').style.display = 'none';
   document.getElementById('decreaseGridButton').style.display = 'none';
 }
@@ -128,11 +127,10 @@ export function drawTriangle(point1, point2) {
 
   _triangleCreated = true;
 
-  // 3단계: 초기화, 캡쳐만 활성화
+  // 3단계: 초기화만 활성화
   document.getElementById('resetButton').style.display = 'block';
   document.getElementById('lengthButton').style.display = 'none';
   document.getElementById('triangleButton').style.display = 'none';
-  document.getElementById('captureButton').style.display = 'block';
   document.getElementById('increaseGridButton').style.display = 'none';
   document.getElementById('decreaseGridButton').style.display = 'none';
 }
@@ -201,7 +199,6 @@ export function resetButtonsToInitial() {
   document.getElementById('resetButton').style.display = 'block';
   document.getElementById('lengthButton').style.display = 'none';
   document.getElementById('triangleButton').style.display = 'none';
-  document.getElementById('captureButton').style.display = 'block';
   document.getElementById('increaseGridButton').style.display = 'block';
   document.getElementById('decreaseGridButton').style.display = 'block';
 }
@@ -220,11 +217,10 @@ export function displayDimensions(point1, point2, gridSize) {
     display.style.display = 'block';
   }
 
-  // 2단계: 초기화, 삼각형 그리기, 캡쳐만 활성화
+  // 2단계: 초기화, 삼각형 그리기만 활성화
   document.getElementById('resetButton').style.display = 'block';
   document.getElementById('lengthButton').style.display = 'none';
   document.getElementById('triangleButton').style.display = 'block';
-  document.getElementById('captureButton').style.display = 'block';
   document.getElementById('increaseGridButton').style.display = 'none';
   document.getElementById('decreaseGridButton').style.display = 'none';
 }

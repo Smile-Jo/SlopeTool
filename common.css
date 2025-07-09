@@ -31,9 +31,17 @@ html, body {
 }
 
 .container h1 {
-    font-size: 25px;
+    font-size: 22px;
     color: #333;
     margin-bottom: 20px;
+}
+
+/* 모바일 기기에서 제목 크기 조정 */
+@media (max-width: 480px) {
+    .container h1 {
+        font-size: 18px;
+        line-height: 1.2;
+    }
 }
 
 .container a {
