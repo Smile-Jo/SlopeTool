@@ -1,7 +1,7 @@
 // Firebase 설정 및 초기화
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, signOut, getRedirectResult } from "firebase/auth";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject, listAll } from "firebase/storage";
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, orderBy } from "firebase/firestore";
 
@@ -25,11 +25,16 @@ export const auth = getAuth(app);
 export const storage = getStorage(app);
 export const db = getFirestore(app);
 
-// Google 인증 제공자 (팝업 방식만 지원)
+// 언어 설정 (사용자 기기 언어 사용)
+auth.useDeviceLanguage();
+
+// Google 인증 제공자 (단순화)
 export const googleProvider = new GoogleAuthProvider();
 
-// 인증 관련 함수들 (팝업 방식만)
+// 인증 관련 함수들
 export const signInWithGooglePopup = () => signInWithPopup(auth, googleProvider);
+export const signInWithGoogleRedirect = () => signInWithRedirect(auth, googleProvider);
+export const getRedirectResultHandler = () => getRedirectResult(auth);
 export const logOut = () => signOut(auth);
 
 // 스토리지 관련 함수들

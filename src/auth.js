@@ -1,5 +1,5 @@
 // 인증 관련 기능 모듈
-import { auth, signInWithGooglePopup, logOut } from './firebaseConfig.js';
+import { auth, signInWithGooglePopup, signInWithGoogleRedirect, getRedirectResultHandler, logOut } from './firebaseConfig.js';
 import { onAuthStateChanged } from 'firebase/auth';
 
 // DOM 요소들
@@ -14,14 +14,22 @@ const authenticatedFeatures = document.getElementById('authenticatedFeatures');
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('인증 모듈 로드됨');
   
-  // 인증 상태 변화 감지
+  // React 예제처럼 단순하게 리다이렉트 결과만 확인
+  try {
+    const result = await getRedirectResultHandler();
+    if (result) {
+      console.log('리다이렉트 로그인 성공:', result.user.displayName);
+    }
+  } catch (error) {
+    console.error('리다이렉트 로그인 오류:', error);
+  }
+  
+  // 인증 상태 변화 감지 (React 예제와 동일한 방식)
   onAuthStateChanged(auth, (user) => {
     if (user) {
-      // 사용자 로그인됨
       console.log('사용자 로그인됨:', user.displayName);
       showUserSection(user);
     } else {
-      // 사용자 로그아웃됨
       console.log('사용자 로그아웃됨');
       showLoginSection();
     }
@@ -38,28 +46,50 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
-// 로그인 처리
+// 로딩 상태 표시
+function showLoadingState() {
+  console.log('로딩 상태 표시');
+  if (loginSection) {
+    loginSection.style.display = 'block';
+    if (loginButton) {
+      loginButton.disabled = true;
+      loginButton.textContent = '로그인 확인 중...';
+    }
+  }
+  if (userSection) userSection.style.display = 'none';
+  if (authenticatedFeatures) authenticatedFeatures.style.display = 'none';
+}
+
+// 로그인 처리 (React 예제처럼 단순화)
 async function handleLogin() {
   try {
-    // 모든 환경에서 팝업 방식 사용
-    console.log('팝업 방식으로 로그인');
+    // 먼저 팝업 방식으로 시도 (React 예제와 동일)
+    console.log('팝업 방식으로 로그인 시도');
     const result = await signInWithGooglePopup();
     console.log('로그인 성공:', result.user.displayName);
   } catch (error) {
-    console.error('로그인 실패:', error);
+    console.error('팝업 로그인 실패:', error);
     
-    let errorMessage = '로그인에 실패했습니다.';
-    if (error.code === 'auth/popup-blocked') {
-      errorMessage = '팝업이 차단되었습니다. 팝업을 허용하고 다시 시도해주세요.';
-    } else if (error.code === 'auth/popup-closed-by-user') {
-      errorMessage = '로그인 창이 닫혔습니다.';
-    } else if (error.code === 'auth/network-request-failed') {
-      errorMessage = '네트워크 연결을 확인해주세요.';
-    } else if (error.code === 'auth/unauthorized-domain') {
-      errorMessage = '이 도메인은 인증이 허용되지 않았습니다.';
+    // 팝업이 차단되거나 모바일인 경우 리다이렉트 시도
+    if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user') {
+      try {
+        console.log('팝업 실패 - 리다이렉트 방식으로 재시도');
+        await signInWithGoogleRedirect();
+      } catch (redirectError) {
+        console.error('리다이렉트 로그인도 실패:', redirectError);
+        alert('로그인에 실패했습니다. 인터넷 연결을 확인해주세요.');
+      }
+    } else {
+      let errorMessage = '로그인에 실패했습니다.';
+      if (error.code === 'auth/network-request-failed') {
+        errorMessage = '네트워크 연결을 확인해주세요.';
+      } else if (error.code === 'auth/unauthorized-domain') {
+        errorMessage = '이 도메인은 인증이 허용되지 않았습니다.';
+      } else if (error.code === 'auth/operation-not-allowed') {
+        errorMessage = 'Google 로그인이 활성화되지 않았습니다.';
+      }
+      alert(errorMessage);
     }
-    
-    alert(errorMessage);
   }
 }
 
@@ -76,6 +106,7 @@ async function handleLogout() {
 
 // 사용자 섹션 표시
 function showUserSection(user) {
+  console.log('사용자 섹션 표시:', user.displayName);
   if (loginSection) loginSection.style.display = 'none';
   if (userSection) userSection.style.display = 'block';
   if (userInfo) userInfo.textContent = `👤 ${user.displayName}`;
@@ -84,6 +115,7 @@ function showUserSection(user) {
 
 // 로그인 섹션 표시
 function showLoginSection() {
+  console.log('로그인 섹션 표시');
   if (loginSection) loginSection.style.display = 'block';
   if (userSection) userSection.style.display = 'none';
   if (authenticatedFeatures) authenticatedFeatures.style.display = 'none';
