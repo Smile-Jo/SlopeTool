@@ -140,7 +140,7 @@ function drawBaseLine(point1, point2) {
   const baseLine = document.createElement('div');
   baseLine.classList.add('base-line');
   baseLine.style.position = 'absolute';
-  baseLine.style.backgroundColor = 'yellow';
+  baseLine.style.backgroundColor = 'orange';
   baseLine.style.zIndex = '14';
   baseLine.style.pointerEvents = 'none';
 
@@ -219,7 +219,7 @@ export function displayDimensions(point1, point2, gridSize) {
   
   if (display && infoPanel) {
     display.innerHTML = `
-      수평 거리: <span style="color: yellow;">${(dx / gridSize)}</span> 
+      수평 거리: <span style="color: orange;">${(dx / gridSize)}</span> 
       &nbsp;&nbsp; 수직 거리: <span style="color: red;">${(dy / gridSize)}</span>
     `;
     display.style.display = 'block';
