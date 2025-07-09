@@ -84,25 +84,9 @@ async function handleLogin() {
 
 async function handleLogout() {
   try {
-    // Firebase 로그아웃
+    // Firebase 로그아웃만 수행 (Google 계정은 브라우저에 유지)
     await logOut();
-    
-    // 사파리에서 Google 인증 캐시 정리
-    // 브라우저의 Google 세션도 정리하기 위한 추가 처리
-    if (navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome')) {
-      console.log('Safari 감지 - Google 세션 정리 시도');
-      // Google 로그아웃 URL로 숨겨진 iframe 요청
-      const iframe = document.createElement('iframe');
-      iframe.style.display = 'none';
-      iframe.src = 'https://accounts.google.com/logout';
-      document.body.appendChild(iframe);
-      
-      // 잠시 후 iframe 제거
-      setTimeout(() => {
-        document.body.removeChild(iframe);
-      }, 1000);
-    }
-    
+    console.log('Firebase 로그아웃 성공');
   } catch (error) {
     console.error('로그아웃 실패:', error);
     alert('로그아웃에 실패했습니다.');
