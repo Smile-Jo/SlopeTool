@@ -8,7 +8,7 @@ import {
   resetHighlights, 
   displayDimensions 
 } from './drawing.js';
-import { gridSize, updateGridOverlay, increaseGridSize, decreaseGridSize } from './grid.js';
+import { gridSize, updateGridOverlay, increaseGridSize, decreaseGridSize, initializeGrid } from './grid.js';
 import { handleTouchAction, handleClickAction } from './events.js';
 
 // 터치 이벤트 상태
@@ -26,7 +26,7 @@ window.addEventListener('load', async () => {
     console.error('카메라 초기화 실패:', error);
   }
   
-  updateGridOverlay();  // 초기 그리드 적용
+  initializeGrid();  // 격자 초기화 (격자점 계산 포함)
   setupEventListeners(); // 이벤트 리스너 설정
 });
 

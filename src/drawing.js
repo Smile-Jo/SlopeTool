@@ -24,15 +24,19 @@ export function addPoint(x, y) {
   highlight.style.borderRadius = '50%';
   highlight.style.border = '2px solid white';
   highlight.style.boxShadow = '0 0 4px rgba(0,0,0,0.5)';
-  highlight.style.top = `${y - 6}px`;
-  highlight.style.left = `${x - 6}px`;
+  // 점의 중심이 격자점 중앙에 오도록 정확히 위치시키기
+  highlight.style.top = `${y - 7.5}px`;  // 점의 높이 절반만큼 위로 이동
+  highlight.style.left = `${x - 7.5}px`; // 점의 너비 절반만큼 왼쪽으로 이동
   highlight.style.pointerEvents = 'none';
   highlight.style.zIndex = '15';
+  // 격자점 좌표를 정확히 저장
   highlight.setAttribute('data-x', x);
   highlight.setAttribute('data-y', y);
 
   document.body.appendChild(highlight);
   _points.push({ x, y });
+  
+  console.log(`점이 격자점 중앙에 정확히 배치됨: (${x}, ${y})`);
 
   if (_points.length === 2) {
     drawLine(_points[0], _points[1]);

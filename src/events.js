@@ -1,4 +1,5 @@
 // 이벤트 처리 관련 기능 모듈
+import { findNearestGridPoint } from './grid.js';
 
 // 컨트롤 영역에서 클릭 차단 여부 확인 함수
 export function isInControlArea(x, y) {
@@ -46,24 +47,33 @@ export function handleTouchAction(touchPoint, points, gridSize, addPointCallback
     return;
   }
 
-  // 격자 점 크기 및 간격
-  const tolerance = 20; // 모바일용 허용 오차
+  // 허용 오차 설정 (터치 지점과 격자점 사이의 최대 거리)
+  const tolerance = 35; // 모바일용 허용 오차
 
-  // 터치 좌표를 근접한 격자 점으로 스냅
-  const snappedX = Math.round(touchX / gridSize) * gridSize;
-  const snappedY = Math.round(touchY / gridSize) * gridSize;
+  // 가장 가까운 격자점 찾기
+  const nearestGridPoint = findNearestGridPoint(touchX, touchY);
   
-  console.log(`터치 좌표: (${touchX}, ${touchY}), 스냅된 좌표: (${snappedX}, ${snappedY}), 격자 크기: ${gridSize}`);
+  if (!nearestGridPoint) {
+    console.log('가장 가까운 격자점을 찾을 수 없습니다.');
+    return;
+  }
 
-  // 터치 좌표가 격자 점과 충분히 가까운지 확인
-  if (Math.abs(touchX - snappedX) <= tolerance && Math.abs(touchY - snappedY) <= tolerance) {
-    const existingHighlight = document.querySelector(`.highlight[data-x="${snappedX}"][data-y="${snappedY}"]`);
+  // 터치 지점과 격자점 사이의 거리 계산
+  const distance = Math.sqrt(
+    Math.pow(touchX - nearestGridPoint.x, 2) + Math.pow(touchY - nearestGridPoint.y, 2)
+  );
+
+  // 허용 오차 내에 있는지 확인
+  if (distance <= tolerance) {
+    const existingHighlight = document.querySelector(`.highlight[data-x="${nearestGridPoint.x}"][data-y="${nearestGridPoint.y}"]`);
 
     if (existingHighlight) {
-      removePointCallback(snappedX, snappedY);
+      removePointCallback(nearestGridPoint.x, nearestGridPoint.y);
     } else {
-      addPointCallback(snappedX, snappedY);
+      addPointCallback(nearestGridPoint.x, nearestGridPoint.y);
     }
+  } else {
+    console.log(`터치 지점이 격자점에서 너무 멀리 떨어져 있습니다. 거리: ${distance.toFixed(2)}px`);
   }
 }
 
@@ -81,23 +91,32 @@ export function handleClickAction(event, points, gridSize, addPointCallback, rem
     return;
   }
 
-  // 격자 점 크기 및 간격
-  const tolerance = 15; // 데스크톱용 허용 오차
+  // 허용 오차 설정 (클릭 지점과 격자점 사이의 최대 거리)
+  const tolerance = 25; // 데스크톱용 허용 오차
 
-  // 클릭 좌표를 근접한 격자 점으로 스냅
-  const snappedX = Math.round(clickX / gridSize) * gridSize;
-  const snappedY = Math.round(clickY / gridSize) * gridSize;
+  // 가장 가까운 격자점 찾기
+  const nearestGridPoint = findNearestGridPoint(clickX, clickY);
+  
+  if (!nearestGridPoint) {
+    console.log('가장 가까운 격자점을 찾을 수 없습니다.');
+    return;
+  }
 
-  console.log(`클릭 좌표: (${clickX}, ${clickY}), 스냅된 좌표: (${snappedX}, ${snappedY}), 격자 크기: ${gridSize}`);
+  // 클릭 지점과 격자점 사이의 거리 계산
+  const distance = Math.sqrt(
+    Math.pow(clickX - nearestGridPoint.x, 2) + Math.pow(clickY - nearestGridPoint.y, 2)
+  );
 
-  // 클릭 좌표가 격자 점과 충분히 가까운지 확인
-  if (Math.abs(clickX - snappedX) <= tolerance && Math.abs(clickY - snappedY) <= tolerance) {
-    const existingHighlight = document.querySelector(`.highlight[data-x="${snappedX}"][data-y="${snappedY}"]`);
+  // 허용 오차 내에 있는지 확인
+  if (distance <= tolerance) {
+    const existingHighlight = document.querySelector(`.highlight[data-x="${nearestGridPoint.x}"][data-y="${nearestGridPoint.y}"]`);
 
     if (existingHighlight) {
-      removePointCallback(snappedX, snappedY);
+      removePointCallback(nearestGridPoint.x, nearestGridPoint.y);
     } else {
-      addPointCallback(snappedX, snappedY);
+      addPointCallback(nearestGridPoint.x, nearestGridPoint.y);
     }
+  } else {
+    console.log(`클릭 지점이 격자점에서 너무 멀리 떨어져 있습니다. 거리: ${distance.toFixed(2)}px`);
   }
 }
