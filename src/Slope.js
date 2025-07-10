@@ -27,9 +27,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // MindAR 초기화
     const mindarThree = new MindARThree({
       container: document.getElementById('container'),  // AR 렌더링 컨테이너
-      imageTargetSrc: './public/Target.mind' // 이미지 인식을 위한 타겟 파일
+      imageTargetSrc: './Target.mind' // 이미지 인식을 위한 타겟 파일
     });
+    
     const { renderer, scene, camera } = mindarThree;
+
+    try {
+      // AR 시작 및 카메라 피드를 배경으로 표시
+      await mindarThree.start();
+      console.log("MindAR 성공적으로 시작됨");
+    } catch (error) {
+      console.error("MindAR 시작 오류:", error);
+      alert("AR 초기화에 실패했습니다. Target.mind 파일을 확인해주세요.");
+      document.querySelector('.input-container').style.display = 'block';
+      return;
+    }
 
     // AR 객체들
     // 직각삼각형 모양 정의
@@ -99,8 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
     anchor.group.add(edgeLine4);
     anchor.group.add(edgeLine5);
 
-    // AR 시작 및 카메라 피드를 배경으로 표시
-    await mindarThree.start();
+    // 렌더링 루프 시작
     renderer.setAnimationLoop(() => {
       renderer.render(scene, camera);
     });
