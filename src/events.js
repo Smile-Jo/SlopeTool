@@ -1,5 +1,4 @@
 // 이벤트 처리 관련 기능 모듈
-import { isNearGridPoint } from './grid.js';
 
 // 컨트롤 영역에서 클릭 차단 여부 확인 함수
 export function isInControlArea(x, y) {
@@ -36,7 +35,7 @@ export function isInControlArea(x, y) {
 }
 
 // 터치 액션 처리
-export function handleTouchAction(touchPoint, points, addPointCallback, removePointCallback) {
+export function handleTouchAction(touchPoint, points, gridSize, addPointCallback, removePointCallback) {
   // 두 점이 이미 추가된 경우 더 이상 추가하지 않음
   if (points.length >= 2) return;
 
@@ -47,12 +46,17 @@ export function handleTouchAction(touchPoint, points, addPointCallback, removePo
     return;
   }
 
-  // 터치 위치에서 가장 가까운 격자점 찾기 (모바일용 허용 오차: 30px)
-  const nearestGridPoint = isNearGridPoint(touchX, touchY, 30);
+  // 격자 점 크기 및 간격
+  const tolerance = 20; // 모바일용 허용 오차
+
+  // 터치 좌표를 근접한 격자 점으로 스냅
+  const snappedX = Math.round(touchX / gridSize) * gridSize;
+  const snappedY = Math.round(touchY / gridSize) * gridSize;
   
-  if (nearestGridPoint) {
-    const { x: snappedX, y: snappedY } = nearestGridPoint;
-    
+  console.log(`터치 좌표: (${touchX}, ${touchY}), 스냅된 좌표: (${snappedX}, ${snappedY}), 격자 크기: ${gridSize}`);
+
+  // 터치 좌표가 격자 점과 충분히 가까운지 확인
+  if (Math.abs(touchX - snappedX) <= tolerance && Math.abs(touchY - snappedY) <= tolerance) {
     const existingHighlight = document.querySelector(`.highlight[data-x="${snappedX}"][data-y="${snappedY}"]`);
 
     if (existingHighlight) {
@@ -64,11 +68,11 @@ export function handleTouchAction(touchPoint, points, addPointCallback, removePo
 }
 
 // 클릭 액션 처리
-export function handleClickAction(event, points, addPointCallback, removePointCallback) {
+export function handleClickAction(event, points, gridSize, addPointCallback, removePointCallback) {
   // 두 점이 이미 추가된 경우 더 이상 추가하지 않음
   if (points.length >= 2) return;
 
-  // 클릭된 위치 좌표 가져오기 (뷰포트 기준)
+  // 클릭된 위치 좌표 가져오기
   const clickX = event.clientX;
   const clickY = event.clientY;
 
@@ -77,12 +81,17 @@ export function handleClickAction(event, points, addPointCallback, removePointCa
     return;
   }
 
-  // 클릭 위치에서 가장 가까운 격자점 찾기 (데스크톱용 허용 오차: 25px)
-  const nearestGridPoint = isNearGridPoint(clickX, clickY, 25);
-  
-  if (nearestGridPoint) {
-    const { x: snappedX, y: snappedY } = nearestGridPoint;
-    
+  // 격자 점 크기 및 간격
+  const tolerance = 15; // 데스크톱용 허용 오차
+
+  // 클릭 좌표를 근접한 격자 점으로 스냅
+  const snappedX = Math.round(clickX / gridSize) * gridSize;
+  const snappedY = Math.round(clickY / gridSize) * gridSize;
+
+  console.log(`클릭 좌표: (${clickX}, ${clickY}), 스냅된 좌표: (${snappedX}, ${snappedY}), 격자 크기: ${gridSize}`);
+
+  // 클릭 좌표가 격자 점과 충분히 가까운지 확인
+  if (Math.abs(clickX - snappedX) <= tolerance && Math.abs(clickY - snappedY) <= tolerance) {
     const existingHighlight = document.querySelector(`.highlight[data-x="${snappedX}"][data-y="${snappedY}"]`);
 
     if (existingHighlight) {

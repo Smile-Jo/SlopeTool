@@ -144,11 +144,11 @@ function handleTouchEnd(event) {
   
   // 짧은 터치만 처리 (길게 누르면 무시)
   if (touchDuration < 300 && touchStartPoint) {
-    handleTouchAction(touchStartPoint, state.points, addPoint, removePoint);
+    handleTouchAction(touchStartPoint, state.points, gridSize, addPoint, removePoint);
   }
 }
 
 // 클릭 처리
 function handleClick(event) {
-  handleClickAction(event, state.points, addPoint, removePoint);
+  handleClickAction(event, state.points, gridSize, addPoint, removePoint);
 }

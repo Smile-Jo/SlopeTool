@@ -28,25 +28,3 @@ export function decreaseGridSize(resetCallback) {
       updateGridOverlay();
   }
 }
-
-// 가장 가까운 격자점을 찾는 함수
-export function findNearestGridPoint(x, y) {
-  // 클릭/터치 위치에서 가장 가까운 격자점 좌표 계산
-  // CSS 격자는 0,0에서 시작하므로 정확히 gridSize 간격으로 격자점이 위치
-  const nearestX = Math.round(x / gridSize) * gridSize;
-  const nearestY = Math.round(y / gridSize) * gridSize;
-  
-  return { x: nearestX, y: nearestY };
-}
-
-// 두 점 사이의 거리 계산
-export function calculateDistance(x1, y1, x2, y2) {
-  return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-}
-
-// 클릭/터치 위치가 격자점에 충분히 가까운지 확인
-export function isNearGridPoint(clickX, clickY, tolerance = 25) {
-  const nearest = findNearestGridPoint(clickX, clickY);
-  const distance = calculateDistance(clickX, clickY, nearest.x, nearest.y);
-  return distance <= tolerance ? nearest : null;
-}
