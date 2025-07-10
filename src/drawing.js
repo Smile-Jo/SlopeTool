@@ -24,8 +24,10 @@ export function addPoint(x, y) {
   highlight.style.borderRadius = '50%';
   highlight.style.border = '2px solid white';
   highlight.style.boxShadow = '0 0 4px rgba(0,0,0,0.5)';
-  highlight.style.top = `${y - 6}px`;
-  highlight.style.left = `${x - 6}px`;
+  // 점의 중심을 정확히 (x, y)에 맞추기 위해 전체 크기의 절반만큼 빼기
+  // 전체 크기 = width(12px) + border(2px * 2) = 16px, 따라서 8px씩 빼기
+  highlight.style.top = `${y - 7.5}px`;
+  highlight.style.left = `${x - 7.5}px`;
   highlight.style.pointerEvents = 'none';
   highlight.style.zIndex = '15';
   highlight.setAttribute('data-x', x);
