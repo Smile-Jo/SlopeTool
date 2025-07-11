@@ -8,8 +8,8 @@ import {
   resetHighlights, 
   displayDimensions 
 } from './drawing.js';
-import { gridSize, updateGridOverlay, increaseGridSize, decreaseGridSize, initializeGrid } from './grid.js';
-import { handleTouchAction, handleClickAction } from './events.js';
+import { gridSize, updateGridOverlay, increaseGridSize, decreaseGridSize, initializeGrid, setGridSize, getCurrentGridSize } from './grid.js';
+import { handleTouchAction, handleClickAction, handlePinchStart, handlePinchMove, handlePinchEnd } from './events.js';
 
 // 터치 이벤트 상태
 let touchStartTime = 0;
@@ -118,6 +118,7 @@ function addButtonEventListeners(button, handler) {
 function setupTouchEvents() {
   // 터치 이벤트 (모바일)
   document.addEventListener('touchstart', handleTouch, { passive: false });
+  document.addEventListener('touchmove', handleTouchMove, { passive: false });
   document.addEventListener('touchend', handleTouchEnd, { passive: false });
   
   // 클릭 이벤트 (데스크톱)
@@ -128,6 +129,13 @@ function setupTouchEvents() {
 function handleTouch(event) {
   event.preventDefault();
   
+  // 핀치 줌 처리
+  if (event.touches.length === 2) {
+    handlePinchStart(event, getCurrentGridSize);
+    return;
+  }
+  
+  // 단일 터치 처리
   touchStartTime = Date.now();
   
   const touch = event.touches[0];
@@ -137,13 +145,26 @@ function handleTouch(event) {
   };
 }
 
+// 터치 이동 처리
+function handleTouchMove(event) {
+  // 핀치 줌 처리
+  if (event.touches.length === 2) {
+    handlePinchMove(event, (newSize) => {
+      setGridSize(newSize, resetHighlights);
+    });
+  }
+}
+
 // 터치 종료 처리
 function handleTouchEnd(event) {
+  // 핀치 줌 종료 처리
+  handlePinchEnd(event);
+  
   const touchEndTime = Date.now();
   const touchDuration = touchEndTime - touchStartTime;
   
-  // 짧은 터치만 처리 (길게 누르면 무시)
-  if (touchDuration < 300 && touchStartPoint) {
+  // 짧은 단일 터치만 처리 (길게 누르거나 멀티터치면 무시)
+  if (touchDuration < 300 && touchStartPoint && event.touches.length === 0) {
     handleTouchAction(touchStartPoint, state.points, gridSize, addPoint, removePoint);
   }
 }

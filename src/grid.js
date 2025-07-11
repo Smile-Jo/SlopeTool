@@ -73,6 +73,22 @@ export function decreaseGridSize(resetCallback) {
   }
 }
 
+// 격자 크기를 직접 설정하는 함수 (핀치 줌용)
+export function setGridSize(newSize, resetCallback = null) {
+  if (newSize >= 20 && newSize <= 100) {
+    if (resetCallback) resetCallback(); // 격자 크기 조정 전 초기화
+    gridSize = newSize;
+    updateGridOverlay();
+    return true;
+  }
+  return false;
+}
+
+// 현재 격자 크기 반환 함수
+export function getCurrentGridSize() {
+  return gridSize;
+}
+
 // 초기 격자점 계산 (페이지 로드 시 호출)
 export function initializeGrid() {
   updateGridOverlay();

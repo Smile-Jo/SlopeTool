@@ -1,6 +1,56 @@
 // 이벤트 처리 관련 기능 모듈
 import { findNearestGridPoint } from './grid.js';
 
+// 핀치 줌 관련 변수들
+let initialDistance = 0;
+let currentGridSize = 50;
+let isZooming = false;
+
+// 두 터치 포인트 사이의 거리 계산
+function getTouchDistance(touch1, touch2) {
+  const dx = touch1.clientX - touch2.clientX;
+  const dy = touch1.clientY - touch2.clientY;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+// 핀치 줌 시작 처리
+export function handlePinchStart(event, getCurrentGridSize) {
+  if (event.touches.length === 2) {
+    isZooming = true;
+    currentGridSize = getCurrentGridSize();
+    initialDistance = getTouchDistance(event.touches[0], event.touches[1]);
+    console.log('핀치 줌 시작:', initialDistance);
+  }
+}
+
+// 핀치 줌 중 처리
+export function handlePinchMove(event, updateGridSizeCallback) {
+  if (event.touches.length === 2 && isZooming) {
+    event.preventDefault(); // 기본 줌 동작 방지
+    
+    const currentDistance = getTouchDistance(event.touches[0], event.touches[1]);
+    const scale = currentDistance / initialDistance;
+    
+    // 새로운 격자 크기 계산 (20~100 범위로 제한)
+    let newGridSize = Math.round(currentGridSize * scale);
+    newGridSize = Math.max(20, Math.min(100, newGridSize));
+    
+    // 5의 배수로 조정 (기존 버튼과 일관성 유지)
+    newGridSize = Math.round(newGridSize / 5) * 5;
+    
+    updateGridSizeCallback(newGridSize);
+    console.log('핀치 줌:', scale.toFixed(2), '새 격자 크기:', newGridSize);
+  }
+}
+
+// 핀치 줌 종료 처리
+export function handlePinchEnd(event) {
+  if (event.touches.length < 2) {
+    isZooming = false;
+    console.log('핀치 줌 종료');
+  }
+}
+
 // 컨트롤 영역에서 클릭 차단 여부 확인 함수
 export function isInControlArea(x, y) {
   const controls = document.querySelector('.controls');
