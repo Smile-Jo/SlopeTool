@@ -15,32 +15,35 @@ import { handleTouchAction, handleClickAction, handlePinchStart, handlePinchMove
 let touchStartTime = 0;
 let touchStartPoint = null;
 
+// 카메라 상태 관리
+let cameraInitialized = false;
+let eventListenersAdded = false;
+
 // 페이지 로드 시 초기화
 window.addEventListener('load', async () => {
-  console.log('페이지 로드 완료');
+  initializeGrid();  // 격자 초기화 (격자점 계산 포함)
+  setupButtonEvents(); // 버튼 이벤트만 먼저 설정
   
   try {
     await startCamera();
-    console.log('카메라 초기화 완료');
+    cameraInitialized = true;
+    setupTouchEvents(); // 카메라 성공 시에만 터치 이벤트 설정
   } catch (error) {
     console.error('카메라 초기화 실패:', error);
+    cameraInitialized = false;
+    // 카메라 실패 시 터치 이벤트는 설정하지 않음
   }
-  
-  initializeGrid();  // 격자 초기화 (격자점 계산 포함)
-  setupEventListeners(); // 이벤트 리스너 설정
 });
 
 // 이벤트 리스너 설정 함수
 function setupEventListeners() {
-  console.log('이벤트 리스너 설정 중...');
-  
   // 버튼 이벤트 리스너
   setupButtonEvents();
   
-  // 터치/클릭 이벤트 리스너
-  setupTouchEvents();
-  
-  console.log('이벤트 리스너 설정 완료');
+  // 터치/클릭 이벤트 리스너 (카메라 성공 시에만)
+  if (cameraInitialized) {
+    setupTouchEvents();
+  }
 }
 
 // 버튼 이벤트 설정
@@ -56,7 +59,6 @@ function setupButtonEvents() {
   // 초기화 버튼
   if (buttons.reset) {
     addButtonEventListeners(buttons.reset, (e) => {
-      console.log('초기화 버튼 사용');
       e.stopPropagation();
       e.preventDefault();
       resetHighlights();
@@ -66,7 +68,6 @@ function setupButtonEvents() {
   // 삼각형 버튼
   if (buttons.triangle) {
     addButtonEventListeners(buttons.triangle, (e) => {
-      console.log('삼각형 버튼 사용');
       e.stopPropagation();
       e.preventDefault();
       if (state.points.length >= 2) {
@@ -78,7 +79,6 @@ function setupButtonEvents() {
   // 거리 측정 버튼
   if (buttons.length) {
     addButtonEventListeners(buttons.length, (e) => {
-      console.log('거리 측정 버튼 사용');
       e.stopPropagation();
       e.preventDefault();
       if (state.points.length >= 2) {
@@ -90,7 +90,6 @@ function setupButtonEvents() {
   // 격자 증가 버튼
   if (buttons.increaseGrid) {
     addButtonEventListeners(buttons.increaseGrid, (e) => {
-      console.log('격자 증가 버튼 사용');
       e.stopPropagation();
       e.preventDefault();
       increaseGridSize(resetHighlights);
@@ -100,7 +99,6 @@ function setupButtonEvents() {
   // 격자 감소 버튼
   if (buttons.decreaseGrid) {
     addButtonEventListeners(buttons.decreaseGrid, (e) => {
-      console.log('격자 감소 버튼 사용');
       e.stopPropagation();
       e.preventDefault();
       decreaseGridSize(resetHighlights);
@@ -116,13 +114,22 @@ function addButtonEventListeners(button, handler) {
 
 // 터치/클릭 이벤트 설정
 function setupTouchEvents() {
+  if (eventListenersAdded) {
+    return; // 이미 추가된 경우 중복 방지
+  }
+  
+  // 캔버스나 비디오 영역에만 이벤트 리스너 추가
+  const targetElement = document.getElementById('overlay-canvas') || document.getElementById('video') || document;
+  
   // 터치 이벤트 (모바일)
-  document.addEventListener('touchstart', handleTouch, { passive: false });
-  document.addEventListener('touchmove', handleTouchMove, { passive: false });
-  document.addEventListener('touchend', handleTouchEnd, { passive: false });
+  targetElement.addEventListener('touchstart', handleTouch, { passive: false });
+  targetElement.addEventListener('touchmove', handleTouchMove, { passive: false });
+  targetElement.addEventListener('touchend', handleTouchEnd, { passive: false });
   
   // 클릭 이벤트 (데스크톱)
-  document.addEventListener('click', handleClick);
+  targetElement.addEventListener('click', handleClick);
+  
+  eventListenersAdded = true;
 }
 
 // 터치 시작 처리

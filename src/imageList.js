@@ -1,6 +1,7 @@
 // 이미지 목록 기능 모듈
 import { checkAuthState } from './auth.js';
 import { getImageList, deleteImageData, deleteImage } from './firebaseConfig.js';
+import { showSuccess, showError, showConfirm, showToast } from './alerts.js';
 
 // DOM 요소들
 let authCheck, filterSection, loadingSection, imageListSection, emptyMessage;
@@ -17,8 +18,6 @@ const imagesPerPage = 15;
 
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', async () => {
-  console.log('이미지 목록 페이지 로드됨');
-  
   // DOM 요소 참조
   initializeDOMElements();
   
@@ -136,7 +135,7 @@ async function loadImageList() {
   } catch (error) {
     console.error('이미지 목록 로드 실패:', error);
     hideLoading();
-    showError('이미지 목록을 불러오는데 실패했습니다.');
+    showErrorMessage('이미지 목록을 불러오는데 실패했습니다.');
   }
 }
 
@@ -360,7 +359,14 @@ function closeImageModal() {
 async function handleDeleteImage() {
   if (!currentImageData) return;
   
-  if (!confirm(`${currentImageData.userName}님의 이미지를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) {
+  const result = await showConfirm(
+    '이미지 삭제', 
+    `${currentImageData.userName}님의 이미지를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`,
+    '삭제',
+    '취소'
+  );
+  
+  if (!result.isConfirmed) {
     return;
   }
   
@@ -375,7 +381,7 @@ async function handleDeleteImage() {
     await deleteImageData(currentImageData.id);
     console.log('Firestore에서 데이터 삭제 완료');
     
-    alert('이미지가 성공적으로 삭제되었습니다.');
+    showSuccess('삭제 완료', '이미지가 성공적으로 삭제되었습니다.');
     closeImageModal();
     
     // 목록 새로고침 (현재 페이지 유지하되, 페이지가 범위를 벗어나면 조정)
@@ -390,7 +396,7 @@ async function handleDeleteImage() {
     
   } catch (error) {
     console.error('이미지 삭제 실패:', error);
-    alert('이미지 삭제에 실패했습니다. 다시 시도해주세요.');
+    showError('삭제 실패', '이미지 삭제에 실패했습니다. 다시 시도해주세요.');
   }
 }
 
@@ -399,7 +405,7 @@ function handleCopyUrl() {
   if (!currentImageData) return;
   
   navigator.clipboard.writeText(currentImageData.imageUrl).then(() => {
-    alert('이미지 URL이 클립보드에 복사되었습니다.');
+    showToast('URL이 클립보드에 복사되었습니다!', 'success');
   }).catch(err => {
     console.error('URL 복사 실패:', err);
     // 대체 방법
@@ -409,7 +415,7 @@ function handleCopyUrl() {
     textArea.select();
     document.execCommand('copy');
     document.body.removeChild(textArea);
-    alert('이미지 URL이 클립보드에 복사되었습니다.');
+    showToast('URL이 클립보드에 복사되었습니다!', 'success');
   });
 }
 
@@ -433,7 +439,7 @@ function showEmptyMessage() {
   emptyMessage.style.display = 'block';
 }
 
-function showError(message) {
+function showErrorMessage(message) {
   hideAllSections();
   emptyMessage.innerHTML = `
     <p>${message}</p>

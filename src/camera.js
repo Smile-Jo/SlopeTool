@@ -1,4 +1,5 @@
 // 카메라 관련 기능 모듈
+import { showError } from './alerts.js';
 
 // 카메라 시작 - 모바일 최적화
 export async function startCamera() {
@@ -7,7 +8,6 @@ export async function startCamera() {
     
     // 모바일 디바이스 확인
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    console.log('모바일 디바이스:', isMobile);
     
     // 사용자 미디어 지원 확인
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -148,6 +148,20 @@ export async function startCamera() {
     
   } catch (error) {
     console.error('카메라 접근 오류:', error);
-    alert('카메라에 접근할 수 없습니다. 브라우저 설정을 확인하고 카메라 권한을 허용해주세요.\n\n오류: ' + error.message);
+    
+    let errorTitle = "카메라 접근 실패";
+    let errorMessage = "";
+    
+    if (error.name === 'NotAllowedError') {
+      errorMessage = "카메라 권한이 거부되었습니다. 브라우저 설정에서 카메라 권한을 허용해주세요.";
+    } else if (error.name === 'NotFoundError') {
+      errorMessage = "카메라를 찾을 수 없습니다. 카메라가 연결되어 있는지 확인해주세요.";
+    } else if (error.name === 'NotSupportedError') {
+      errorMessage = "브라우저가 카메라를 지원하지 않습니다. 다른 브라우저를 사용해보세요.";
+    } else {
+      errorMessage = `카메라에 접근할 수 없습니다. 오류: ${error.message}`;
+    }
+    
+    showError(errorTitle, errorMessage);
   }
 }

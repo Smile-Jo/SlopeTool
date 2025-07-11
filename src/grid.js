@@ -15,8 +15,6 @@ function calculateGridPoints() {
       _gridPoints.push({ x, y });
     }
   }
-
-  console.log(`격자점 ${_gridPoints.length}개 계산 완료 (격자 크기: ${gridSize}px)`);
 }
 
 // 가장 가까운 격자점 찾기 함수
@@ -39,7 +37,6 @@ export function findNearestGridPoint(touchX, touchY) {
     }
   }
 
-  console.log(`터치 지점: (${touchX}, ${touchY}), 가장 가까운 격자점: (${nearestPoint.x}, ${nearestPoint.y}), 거리: ${minDistance.toFixed(2)}px`);
   return nearestPoint;
 }
 

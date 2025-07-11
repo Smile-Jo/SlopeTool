@@ -1,6 +1,7 @@
 // 인증 관련 기능 모듈
 import { auth, signInWithGooglePopup, signInWithGoogleRedirect, getRedirectResultHandler, logOut } from './firebaseConfig.js';
 import { onAuthStateChanged } from 'firebase/auth';
+import { showError, showSuccess } from './alerts.js';
 
 // DOM 요소들
 const loginButton = document.getElementById('loginButton');
@@ -12,8 +13,6 @@ const authenticatedFeatures = document.getElementById('authenticatedFeatures');
 
 // 페이지 로드 시 인증 상태 리스너 설정
 document.addEventListener('DOMContentLoaded', async () => {
-  console.log('인증 모듈 로드됨');
-  
   // React 예제처럼 단순하게 리다이렉트 결과만 확인
   try {
     const result = await getRedirectResultHandler();
@@ -66,7 +65,7 @@ async function handleLogin() {
         await signInWithGoogleRedirect();
       } catch (redirectError) {
         console.error('리다이렉트 로그인도 실패:', redirectError);
-        alert('로그인에 실패했습니다. 인터넷 연결을 확인해주세요.');
+        showError('로그인 실패', '로그인에 실패했습니다. 인터넷 연결을 확인해주세요.');
       }
     } else {
       let errorMessage = '로그인에 실패했습니다.';
@@ -77,7 +76,7 @@ async function handleLogin() {
       } else if (error.code === 'auth/operation-not-allowed') {
         errorMessage = 'Google 로그인이 활성화되지 않았습니다.';
       }
-      alert(errorMessage);
+      showError('로그인 실패', errorMessage);
     }
   }
 }
@@ -89,7 +88,7 @@ async function handleLogout() {
     console.log('Firebase 로그아웃 성공');
   } catch (error) {
     console.error('로그아웃 실패:', error);
-    alert('로그아웃에 실패했습니다.');
+    showError('로그아웃 실패', '로그아웃에 실패했습니다. 다시 시도해주세요.');
   }
 }
 

@@ -19,7 +19,6 @@ export function handlePinchStart(event, getCurrentGridSize) {
     isZooming = true;
     currentGridSize = getCurrentGridSize();
     initialDistance = getTouchDistance(event.touches[0], event.touches[1]);
-    console.log('핀치 줌 시작:', initialDistance);
   }
 }
 
@@ -39,7 +38,6 @@ export function handlePinchMove(event, updateGridSizeCallback) {
     newGridSize = Math.round(newGridSize / 5) * 5;
     
     updateGridSizeCallback(newGridSize);
-    console.log('핀치 줌:', scale.toFixed(2), '새 격자 크기:', newGridSize);
   }
 }
 
@@ -47,7 +45,6 @@ export function handlePinchMove(event, updateGridSizeCallback) {
 export function handlePinchEnd(event) {
   if (event.touches.length < 2) {
     isZooming = false;
-    console.log('핀치 줌 종료');
   }
 }
 
@@ -104,7 +101,6 @@ export function handleTouchAction(touchPoint, points, gridSize, addPointCallback
   const nearestGridPoint = findNearestGridPoint(touchX, touchY);
   
   if (!nearestGridPoint) {
-    console.log('가장 가까운 격자점을 찾을 수 없습니다.');
     return;
   }
 
@@ -122,8 +118,6 @@ export function handleTouchAction(touchPoint, points, gridSize, addPointCallback
     } else {
       addPointCallback(nearestGridPoint.x, nearestGridPoint.y);
     }
-  } else {
-    console.log(`터치 지점이 격자점에서 너무 멀리 떨어져 있습니다. 거리: ${distance.toFixed(2)}px`);
   }
 }
 
@@ -148,7 +142,6 @@ export function handleClickAction(event, points, gridSize, addPointCallback, rem
   const nearestGridPoint = findNearestGridPoint(clickX, clickY);
   
   if (!nearestGridPoint) {
-    console.log('가장 가까운 격자점을 찾을 수 없습니다.');
     return;
   }
 
@@ -166,7 +159,5 @@ export function handleClickAction(event, points, gridSize, addPointCallback, rem
     } else {
       addPointCallback(nearestGridPoint.x, nearestGridPoint.y);
     }
-  } else {
-    console.log(`클릭 지점이 격자점에서 너무 멀리 떨어져 있습니다. 거리: ${distance.toFixed(2)}px`);
   }
 }

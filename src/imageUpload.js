@@ -1,14 +1,13 @@
 // 이미지 업로드 기능 모듈
 import { checkAuthState } from './auth.js';
 import { uploadImage, addImageData } from './firebaseConfig.js';
+import { showError, showSuccess, showWarning, showLoading, showConfirm } from './alerts.js';
 
 // DOM 요소들
 let authCheck, uploadForm, uploadButton, cancelButton, imageFile, imagePreview, uploadProgress, progressFill;
 
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', async () => {
-  console.log('이미지 업로드 페이지 로드됨');
-  
   // DOM 요소 참조
   authCheck = document.getElementById('authCheck');
   uploadForm = document.getElementById('uploadForm');
@@ -81,7 +80,7 @@ function handleFileSelect(event) {
   if (file) {
     // 파일 크기 확인 (5MB 제한)
     if (file.size > 5 * 1024 * 1024) {
-      alert('파일 크기는 5MB 이하여야 합니다.');
+      showWarning('파일 크기 초과', '파일 크기는 5MB 이하여야 합니다.');
       imageFile.value = '';
       imagePreview.innerHTML = '';
       return;
@@ -89,7 +88,7 @@ function handleFileSelect(event) {
 
     // 이미지 파일 형식 확인
     if (!file.type.startsWith('image/')) {
-      alert('이미지 파일만 업로드 가능합니다.');
+      showWarning('잘못된 파일 형식', '이미지 파일만 업로드 가능합니다.');
       imageFile.value = '';
       imagePreview.innerHTML = '';
       return;
@@ -124,7 +123,7 @@ async function handleFormSubmit(event) {
 
   // 유효성 검사
   if (!userName || !grade || !classNumber || !file) {
-    alert('모든 필수 필드를 입력해주세요.');
+    showWarning('입력 필드 확인', '모든 필수 필드를 입력해주세요.');
     return;
   }
 
@@ -162,19 +161,26 @@ async function handleFormSubmit(event) {
     console.log('이미지 데이터 저장 완료');
 
     // 성공 메시지 및 리다이렉트
-    alert('이미지가 성공적으로 업로드되었습니다!');
+    await showSuccess('업로드 완료', '이미지가 성공적으로 업로드되었습니다!');
     window.location.href = './imageList.html';
 
   } catch (error) {
     console.error('업로드 실패:', error);
-    alert('업로드에 실패했습니다. 다시 시도해주세요.');
+    showError('업로드 실패', '업로드에 실패했습니다. 다시 시도해주세요.');
     hideUploadProgress();
   }
 }
 
 // 취소 버튼 처리
-function handleCancel() {
-  if (confirm('작성 중인 내용이 모두 사라집니다. 계속하시겠습니까?')) {
+async function handleCancel() {
+  const result = await showConfirm(
+    '작성 취소',
+    '작성 중인 내용이 모두 사라집니다. 계속하시겠습니까?',
+    '예, 취소합니다',
+    '아니오'
+  );
+  
+  if (result.isConfirmed) {
     window.location.href = './index.html';
   }
 }

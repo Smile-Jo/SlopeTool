@@ -1,15 +1,10 @@
 import * as THREE from 'three';
 import { MindARThree } from 'https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js';
+import { showError, showWarning } from './alerts.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-  console.log("JavaScript 로드됨 및 DOM 준비 완료!");
-
   const startButton = document.getElementById('startButton');
   startButton.addEventListener('click', async () => {
-    console.log("시작 버튼 클릭됨!");
-
-    // AR 시작 시 입력 컨테이너 숨기기
-    document.querySelector('.input-container').style.display = 'none';
 
     // 입력 값 가져오기
     const baseLength = parseFloat(document.getElementById('baseLength').value / 5);
@@ -17,9 +12,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 입력 값 검증
     if (isNaN(baseLength) || isNaN(heightLength) || baseLength <= 0 || heightLength <= 0) {
-      alert('유효한 밑변과 높이 값을 입력하세요.');
+      showWarning('입력 오류', '유효한 밑변과 높이 값을 입력하세요.');
       return;
     }
+
+    // 검증 성공 후 AR 시작 시 입력 컨테이너 숨기기
+    document.querySelector('.input-container').style.display = 'none';
 
     // 빗변 길이 계산
     const hypotenuseLength = Math.sqrt(baseLength * baseLength + heightLength * heightLength);
@@ -35,10 +33,22 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       // AR 시작 및 카메라 피드를 배경으로 표시
       await mindarThree.start();
-      console.log("MindAR 성공적으로 시작됨");
     } catch (error) {
       console.error("MindAR 시작 오류:", error);
-      alert("AR 초기화에 실패했습니다. Target.mind 파일을 확인해주세요.");
+      
+      // 구체적인 오류 메시지 제공
+      let errorTitle = "AR 초기화 실패";
+      let errorMessage = "";
+      
+      if (error.name === 'NotFoundError' || error.message.includes('getUserMedia')) {
+        errorMessage = "카메라에 접근할 수 없습니다. 카메라 권한을 확인하거나 HTTPS 환경에서 실행해주세요.";
+      } else if (error.message.includes('Target.mind')) {
+        errorMessage = "Target.mind 파일을 찾을 수 없습니다. 파일 경로를 확인해주세요.";
+      } else {
+        errorMessage = "AR 시스템을 초기화할 수 없습니다. 다시 시도해주세요.";
+      }
+      
+      showError(errorTitle, errorMessage);
       document.querySelector('.input-container').style.display = 'block';
       return;
     }
