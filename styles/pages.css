@@ -348,6 +348,9 @@ button:hover {
     font-size: 12px;
     color: #666;
     line-height: 1.4;
+    word-break: break-word;
+    white-space: normal;
+    overflow-wrap: break-word;
 }
 
 /* 폼 액션 버튼 */
