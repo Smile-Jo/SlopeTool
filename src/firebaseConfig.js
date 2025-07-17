@@ -7,13 +7,13 @@ import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, order
 
 // Firebase 설정 객체
 const firebaseConfig = {
-  apiKey: "AIzaSyCZehGxQjGBXgrPjC-UezZO58H1WSH55d0",
-  authDomain: "slopeimageupload.firebaseapp.com",
-  projectId: "slopeimageupload",
-  storageBucket: "slopeimageupload.firebasestorage.app",
-  messagingSenderId: "26570564170",
-  appId: "1:26570564170:web:f80409b0df0916d148bcb3",
-  measurementId: "G-MXEG6TY1Y8"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 // Firebase 앱 초기화
